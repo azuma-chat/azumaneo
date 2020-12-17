@@ -2,6 +2,7 @@ use serde::Serialize;
 use actix_web::{HttpRequest, HttpResponse, body::Body};
 use actix_web::http::StatusCode;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum AzumaRejection {
     AlreadyExists,
@@ -23,7 +24,7 @@ pub struct RejectionMessage {
     message: String,
 }
 
-
+#[allow(unused_variables)]
 pub fn handle_rejection(req: &HttpRequest, cause: AzumaRejection) -> HttpResponse {
     let (code, message) = match cause {
         AzumaRejection::NotFound => {

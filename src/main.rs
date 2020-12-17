@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate actix_web;
-
 use std::{net::SocketAddr};
 use tokio::{signal, sync::oneshot, task};
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
@@ -27,7 +24,7 @@ async fn main() {
          .expect("Couldn't parse AZUMA_HOST");*/
     let listen_addr: SocketAddr = SocketAddr::new("0.0.0.0".parse().unwrap(), 8080);
 
-    let (tx, rx) = oneshot::channel();
+    let (tx, _rx) = oneshot::channel();
     let server = HttpServer::new(move || App::new()
         .wrap(middleware::Logger::default())
         .route("/", web::get().to(placeholder_route))

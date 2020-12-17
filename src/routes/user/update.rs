@@ -6,7 +6,7 @@ use pbkdf2::{pbkdf2_check};
 use strum::IntoEnumIterator;
 use std::collections::HashMap;
 use bson::oid::ObjectId;
-use std::borrow::BorrowMut;
+use crate::models::etc::DefaultResponse;
 
 pub async fn update_user(req: HttpRequest) -> HttpResponse {
 
@@ -34,9 +34,24 @@ pub async fn update_user(req: HttpRequest) -> HttpResponse {
     };
 
 
-    let tmp = User::update(fetched_user.id, generate_updated_user(&req)).await;
+    let update_result = User::update(fetched_user.id, generate_updated_user(&req)).await;
 
-    HttpResponse::Ok().body(Body::from(format!("{:?}", tmp)))
+    let success = DefaultResponse { code: 200, message: "Successfully updated the user".to_string()};
+    let fail = DefaultResponse { code: 417, message: "The requested user does not exist".to_string()};
+
+    return match update_result {
+        Ok(result) => match result.modified_count {
+            1 => HttpResponse::Ok().body(Body::from(match serde_json::to_string(&success) {
+                Ok(res) => res,
+                Err(_) => return HttpResponse::InternalServerError().body(Body::from("An error occurred while parsing the response"))
+            })),
+            _ => HttpResponse::ExpectationFailed().body(Body::from(match serde_json::to_string(&fail) {
+                Ok(res) => res,
+                Err(_) => return HttpResponse::InternalServerError().body(Body::from("An error occurred while parsing the response"))
+            }))
+        },
+        Err(err) => handle_rejection(&req, err),
+    }
 }
 
 
@@ -50,13 +65,10 @@ pub fn generate_updated_user(req: &HttpRequest) -> UpdatableUser {
         };
     }
     let mut user = UpdatableUser::new();
-    dbg!(&update);
-    let mut copy = user.clone();
     for property in update {
-        copy = UpdatableUser::update_property(copy, property.0, property.1);
+        user = UpdatableUser::update_property(user, property.0, property.1);
     }
-    dbg!(&copy);
-    copy
+    user
 }
 
 #[derive(Clone, Debug)]

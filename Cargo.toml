@@ -21,6 +21,7 @@ pbkdf2 = "0.6"
 lazy_static = "1.4"
 strum = "0.20.0"
 strum_macros = "0.20"
+term = "0.6.1"
 
 # actix-http is needed for custom 404 response
 # actix-http = "2.2.0"

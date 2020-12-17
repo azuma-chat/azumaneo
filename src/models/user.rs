@@ -6,6 +6,7 @@ use crate::util::{get_mongodb, prettyprint_option_string};
 use serde::ser::{SerializeStruct, Serializer};
 use strum_macros::EnumIter;
 use crate::routes::user::update::UpdatableUser;
+use mongodb::results::UpdateResult;
 
 
 #[derive(Deserialize)]
@@ -88,7 +89,10 @@ impl UserProperties {
 impl User {
     pub async fn new(name: String, password: String) -> Result<User, AzumaRejection> {
         #[allow(non_snake_case)]
-            let AZUMA_DB = get_mongodb().await;
+            let AZUMA_DB = match get_mongodb().await {
+            Ok(user) => user,
+            Err(_) => return Err(AzumaRejection::InternalServerError)
+        };
         let coll = AZUMA_DB.collection("users");
         match coll.find_one(Some(doc! { "name": name.clone() }), None).await {
             Ok(doc) => match doc {
@@ -121,7 +125,10 @@ impl User {
 
     pub async fn get(name: String) -> Result<User, AzumaRejection> {
         #[allow(non_snake_case)]
-            let AZUMA_DB = get_mongodb().await;
+            let AZUMA_DB = match get_mongodb().await {
+            Ok(user) => user,
+            Err(_) => return Err(AzumaRejection::InternalServerError)
+        };
         let coll = AZUMA_DB.collection("users");
         match coll.find_one(Some(doc! { "name": name }), None).await {
             Ok(doc) => match doc {
@@ -140,7 +147,10 @@ impl User {
 
     pub async fn get_by_id(id: String) -> Result<User, AzumaRejection> {
         #[allow(non_snake_case)]
-            let AZUMA_DB = get_mongodb().await;
+            let AZUMA_DB = match get_mongodb().await {
+            Ok(user) => user,
+            Err(_) => return Err(AzumaRejection::InternalServerError)
+        };
         let obj_id = match ObjectId::with_string(id.as_str()) {
             Ok(id) => id,
             Err(_) => return Err(AzumaRejection::BadRequest)
@@ -158,35 +168,41 @@ impl User {
         }
     }
 
-    pub async fn update(id: ObjectId, updates: UpdatableUser) -> Result<(), AzumaRejection> {
-        println!("{}", id.to_string());
+    pub async fn update(id: ObjectId, updates: UpdatableUser) -> Result<UpdateResult, AzumaRejection> {
         let old_user = match User::get_by_id(id.to_string()).await {
             Ok(user) => user,
             Err(err) => {
-                println!("old user does not exist!");
-                return Err(err); }
+                return Err(err);
+            }
         };
 
         #[allow(non_snake_case)]
-            let AZUMA_DB = get_mongodb().await;
+            let AZUMA_DB = match get_mongodb().await {
+            Ok(user) => user,
+            Err(_) => return Err(AzumaRejection::InternalServerError)
+        };
         let coll = AZUMA_DB.collection("users");
         let doc = generate_updated_document(old_user, &updates);
-        println!("doc:  {:?}", doc);
         if doc.is_empty() {
-            return Ok(());
+            return Err(AzumaRejection::BadRequest);
         }
-        match coll.update_one(doc! { "_id": id }, doc, None).await {
-            Ok(res) => println!("update result: {:?}", res),
-            Err(err) => println!("update err: {:?}", err),
+        let res = match coll.update_one(doc! { "_id": id }, doc, None).await {
+            Ok(res) => {
+                println!("update result: {:?}", res);
+                res
+            }
+            Err(err) => {
+                println!("update err: {:?}", err);
+                return Err(AzumaRejection::InternalServerError);
+            }
         };
 
-        Ok(())
+        Ok(res)
     }
 }
 
 //TODO: Hash password before saving it
 fn generate_updated_document(old_user: User, updates: &UpdatableUser) -> StructDoc {
-    println!("Updatable user: {:?}", updates);
     let mut doc = StructDoc::new();
     if updates.name != None {
         doc.insert("name", updates.name.as_ref().unwrap());

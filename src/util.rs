@@ -4,14 +4,32 @@ use crate::models::etc::DefaultResponse;
 use actix_web::{HttpRequest, HttpResponse, body::Body};
 
 
-//TODO: Error message when db connection couldN't be established
-pub async fn get_mongodb() -> Database {
-    let db_client = Client::with_uri_str(
-        &env::var("AZUMA_MONGODB").expect("Environment variable AZUMA_MONGODB not found"),
-    ).await.expect("Error creating MongoDB client");
-    db_client.database(
-        &env::var("AZUMA_DBNAME").expect("Environment variable AZUMA_DBNAME not found"),
-    )
+pub async fn get_mongodb() -> Result<Database, String> {
+    let db_client = match Client::with_uri_str(
+        match &env::var("AZUMA_MONGODB") {
+            Ok(env) => env,
+            Err(_) => {
+                print_console_err("Environment variable AZUMA_MONGODB not found".to_string());
+                return Err("Environment variable AZUMA_MONGODB not found".to_string());
+            }
+        },
+    ).await {
+        Ok(client) => client,
+        Err(_) => {
+            print_console_err("An error occurred while creating the MongoDB client".to_string());
+            return Err("An error occurred while creating the MongoDB client".to_string());
+        }
+    };
+    let db = db_client.database(
+        match &env::var("AZUMA_DBNAME") {
+            Ok(env) => env,
+            Err(_) => {
+                print_console_err("Environment variable AZUMA_DBNAME not found".to_string());
+                return Err("Environment variable AZUMA_DBNAME not found".to_string());
+            }
+        },
+    );
+    Ok(db)
 }
 
 pub fn get_header_value_simple(req: &HttpRequest, header_name: &str) -> Result<String, HttpResponse> {
@@ -55,4 +73,13 @@ pub fn prettyprint_option_string(opt: Option<String>) -> String {
         Some(string) => string,
         None => "None".to_string()
     }
+}
+
+#[allow(unused_must_use)]
+pub fn print_console_err(input: String) {
+    let mut terminal = term::stdout().expect("Failed getting the terminal!");
+    terminal.fg(term::color::BRIGHT_RED).unwrap();
+    terminal.attr(term::Attr::Bold).unwrap();
+    println!("{}", input);
+    terminal.reset();
 }
