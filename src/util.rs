@@ -1,45 +1,48 @@
-use mongodb::{Database, Client};
-use std::env;
 use crate::models::etc::DefaultResponse;
-use actix_web::{HttpRequest, HttpResponse, body::Body};
-
+use actix_web::{body::Body, HttpRequest, HttpResponse};
+use mongodb::{Client, Database};
+use std::env;
 
 pub async fn get_mongodb() -> Result<Database, String> {
-    let db_client = match Client::with_uri_str(
-        match &env::var("AZUMA_MONGODB") {
-            Ok(env) => env,
-            Err(_) => {
-                print_console_err("Environment variable AZUMA_MONGODB not found".to_string());
-                return Err("Environment variable AZUMA_MONGODB not found".to_string());
-            }
-        },
-    ).await {
+    let db_client = match Client::with_uri_str(match &env::var("AZUMA_MONGODB") {
+        Ok(env) => env,
+        Err(_) => {
+            print_console_err("Environment variable AZUMA_MONGODB not found".to_string());
+            return Err("Environment variable AZUMA_MONGODB not found".to_string());
+        }
+    })
+    .await
+    {
         Ok(client) => client,
         Err(_) => {
             print_console_err("An error occurred while creating the MongoDB client".to_string());
             return Err("An error occurred while creating the MongoDB client".to_string());
         }
     };
-    let db = db_client.database(
-        match &env::var("AZUMA_DBNAME") {
-            Ok(env) => env,
-            Err(_) => {
-                print_console_err("Environment variable AZUMA_DBNAME not found".to_string());
-                return Err("Environment variable AZUMA_DBNAME not found".to_string());
-            }
-        },
-    );
+    let db = db_client.database(match &env::var("AZUMA_DBNAME") {
+        Ok(env) => env,
+        Err(_) => {
+            print_console_err("Environment variable AZUMA_DBNAME not found".to_string());
+            return Err("Environment variable AZUMA_DBNAME not found".to_string());
+        }
+    });
     Ok(db)
 }
 
-pub fn get_header_value_simple(req: &HttpRequest, header_name: &str) -> Result<String, HttpResponse> {
+pub fn get_header_value_simple(
+    req: &HttpRequest,
+    header_name: &str,
+) -> Result<String, HttpResponse> {
     let req_error = DefaultResponse {
         code: 400,
         message: format!("Bad request. Header '{}' is missing.", &header_name),
     };
     let conv_error = DefaultResponse {
         code: 400,
-        message: format!("Bad request. Header '{}' couldn't be converted to str.", &header_name),
+        message: format!(
+            "Bad request. Header '{}' couldn't be converted to str.",
+            &header_name
+        ),
     };
     let err_response = HttpResponse::BadRequest()
         .header("Content-Type", "application/json")
@@ -48,14 +51,21 @@ pub fn get_header_value_simple(req: &HttpRequest, header_name: &str) -> Result<S
     let header = match headers.get(header_name) {
         Some(header) => match header.to_str() {
             Ok(header) => header,
-            Err(_) => return Err(err_response.set_body(Body::from(serde_json::to_string(&conv_error).unwrap())))
+            Err(_) => {
+                return Err(
+                    err_response.set_body(Body::from(serde_json::to_string(&conv_error).unwrap()))
+                )
+            }
         },
-        None => return Err(err_response.set_body(Body::from(serde_json::to_string(&req_error).unwrap()))),
+        None => {
+            return Err(
+                err_response.set_body(Body::from(serde_json::to_string(&req_error).unwrap()))
+            )
+        }
     };
 
     Ok(header.parse().unwrap())
 }
-
 
 pub fn get_header_value(req: &HttpRequest, header_name: &str) -> Option<String> {
     let headers = req.headers();
@@ -71,7 +81,7 @@ pub fn get_header_value(req: &HttpRequest, header_name: &str) -> Option<String> 
 pub fn prettyprint_option_string(opt: Option<String>) -> String {
     match opt {
         Some(string) => string,
-        None => "None".to_string()
+        None => "None".to_string(),
     }
 }
 

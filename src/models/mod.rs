@@ -1,4 +1,4 @@
-pub mod user;
-pub mod rejection;
 pub mod etc;
 pub mod message;
+pub mod rejection;
+pub mod user;
