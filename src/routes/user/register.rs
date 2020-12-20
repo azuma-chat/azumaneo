@@ -1,4 +1,4 @@
-use crate::models::user::User;
+use crate::models::{error::AzumaError, user::User};
 use crate::AzumaState;
 use actix_web::{web, HttpResponse};
 use serde::Deserialize;
@@ -12,11 +12,9 @@ pub struct RegisterUserRequest {
 pub async fn register_user(
     data: web::Data<AzumaState>,
     request: web::Json<RegisterUserRequest>,
-) -> HttpResponse {
-    let _ = User::new(&request.name, &request.password, &data.db)
-        .await
-        .unwrap();
+) -> Result<HttpResponse, AzumaError> {
+    let _ = User::new(&request.name, &request.password, &data.db).await?;
 
     // TODO: return session for newly created user
-    HttpResponse::Ok().body("")
+    Ok(HttpResponse::Ok().body(""))
 }
