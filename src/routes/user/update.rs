@@ -1,4 +1,3 @@
-use crate::models::rejection::handle_rejection;
 use crate::models::user::User;
 use crate::util::{get_header_value, get_header_value_simple};
 use crate::{models::etc::DefaultResponse, placeholder_route};

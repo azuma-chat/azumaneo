@@ -1,5 +1,5 @@
 use crate::models::user::User;
-use crate::ApiState;
+use crate::AzumaState;
 use actix_web::{web, HttpResponse};
 use serde::Deserialize;
 
@@ -10,7 +10,7 @@ pub struct RegisterUserRequest {
 }
 
 pub async fn register_user(
-    data: web::Data<ApiState>,
+    data: web::Data<AzumaState>,
     request: web::Json<RegisterUserRequest>,
 ) -> HttpResponse {
     let _ = User::new(&request.name, &request.password, &data.db)

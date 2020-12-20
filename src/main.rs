@@ -15,7 +15,7 @@ pub fn placeholder_route(req: HttpRequest) -> HttpResponse {
     HttpResponse::NotImplemented().body(response)
 }
 
-pub struct ApiState {
+pub struct AzumaState {
     pub db: PgPool,
 }
 
@@ -36,7 +36,7 @@ async fn main() {
     let (tx, _rx) = oneshot::channel();
     let server = HttpServer::new(move || {
         App::new()
-            .data(ApiState { db: db.clone() })
+            .data(AzumaState { db: db.clone() })
             .wrap(middleware::Logger::default())
             .route("/", web::get().to(placeholder_route))
             .route("/api/info", web::to(routes::api::info::api_info))

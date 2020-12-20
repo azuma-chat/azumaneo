@@ -1,4 +1,4 @@
-use crate::models::rejection::AzumaRejection;
+use crate::models::error::AzumaError;
 use chrono::{DateTime, Utc};
 use rand::random;
 use sqlx::{query_as, types::Uuid, FromRow, PgPool};
@@ -13,14 +13,13 @@ pub struct User {
 }
 
 impl User {
-    pub async fn new(name: &str, password: &str, db: &PgPool) -> Result<User, AzumaRejection> {
+    pub async fn new(name: &str, password: &str, db: &PgPool) -> Result<User, AzumaError> {
         // TODO: create new user
         let hashed_password = argon2::hash_encoded(
             password.as_bytes(),
             &random::<[u8; 8]>(),
             &argon2::Config::default(),
-        )
-        .unwrap();
+        )?;
 
         let user = query_as!(
             User,
@@ -29,24 +28,22 @@ impl User {
             hashed_password
         )
         .fetch_optional(db)
-        .await
-        .unwrap()
-        .unwrap();
+        .await?;
 
-        Ok(user)
+        user.ok_or(AzumaError::AlreadyExists)
     }
 
-    pub async fn get(name: String) -> Result<(), AzumaRejection> {
+    pub async fn get(name: String) -> Result<(), AzumaError> {
         // TODO: get user by name
         Ok(())
     }
 
-    pub async fn get_by_id(id: String) -> Result<(), AzumaRejection> {
+    pub async fn get_by_id(id: String) -> Result<(), AzumaError> {
         // TODO: get user by id
         Ok(())
     }
 
-    /*pub async fn update(id: u64, updates: UpdatableUser) -> Result<(), AzumaRejection> {
+    /*pub async fn update(id: u64, updates: UpdatableUser) -> Result<(), AzumaError> {
         // TODO: update user
         Ok(())
     }*/

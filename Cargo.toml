@@ -20,6 +20,7 @@ serde_json = "^1.0"
 sqlx = { version = "0.4", features = ["chrono", "macros", "migrate", "offline", "postgres", "runtime-actix-rustls", "uuid"] }
 strum = { version = "0.20", features = ["derive"] }
 term = "0.6"
+thiserror = "^1.0"
 tokio = { version = "0.2", features = ["macros", "signal", "sync"] }
 uuid = { version = "0.8", features = ["serde"] }
 

@@ -392,6 +392,7 @@ dependencies = [
  "sqlx",
  "strum",
  "term",
+ "thiserror",
  "tokio",
  "uuid",
 ]
