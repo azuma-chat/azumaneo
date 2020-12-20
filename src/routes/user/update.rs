@@ -1,9 +1,8 @@
 use crate::models::rejection::handle_rejection;
-use crate::models::user::{User, UserProperties, UserStatus};
+use crate::models::user::User;
 use crate::util::{get_header_value, get_header_value_simple};
 use crate::{models::etc::DefaultResponse, placeholder_route};
 use actix_web::{body::Body, HttpRequest, HttpResponse};
-use pbkdf2::pbkdf2_check;
 use std::collections::HashMap;
 use strum::IntoEnumIterator;
 
@@ -13,7 +12,7 @@ pub async fn update_user(req: HttpRequest) -> HttpResponse {
     placeholder_route(req)
 }
 
-pub fn generate_updated_user(req: &HttpRequest) -> UpdatableUser {
+/*pub fn generate_updated_user(req: &HttpRequest) -> UpdatableUser {
     /*let mut update: HashMap<UserProperties, String> = HashMap::new();
     for property in UserProperties::iter() {
         UserProperties::get_default_header_name(&property);
@@ -65,4 +64,4 @@ impl UpdatableUser {
         }
         user
     }
-}
+}*/
