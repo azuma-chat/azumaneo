@@ -1,72 +1,18 @@
-use crate::models::etc::DefaultResponse;
-use crate::models::rejection::handle_rejection;
-use crate::models::user::{User, UserProperties, UserStatus};
+use crate::models::user::User;
 use crate::util::{get_header_value, get_header_value_simple};
+use crate::{models::etc::DefaultResponse, placeholder_route};
 use actix_web::{body::Body, HttpRequest, HttpResponse};
-use bson::oid::ObjectId;
-use pbkdf2::pbkdf2_check;
 use std::collections::HashMap;
 use strum::IntoEnumIterator;
 
 pub async fn update_user(req: HttpRequest) -> HttpResponse {
     //TODO: Implement session check instead of username/passwd check
-
-    let username = match get_header_value_simple(&req, "name") {
-        Ok(name) => name,
-        Err(err) => return err,
-    };
-
-    let passwd = match get_header_value_simple(&req, "password") {
-        Ok(name) => name,
-        Err(err) => return err,
-    };
-
-    let fetched_user = match User::get(username).await {
-        Ok(user) => user,
-        Err(err) => return handle_rejection(&req, err),
-    };
-
-    match pbkdf2_check(passwd.as_str(), fetched_user.password.as_str()) {
-        Ok(_) => (),
-        Err(_) => return HttpResponse::Unauthorized().body(Body::from("Password don't match")),
-    };
-
-    let update_result = User::update(fetched_user.id, generate_updated_user(&req)).await;
-
-    let success = DefaultResponse {
-        code: 200,
-        message: "Successfully updated the user".to_string(),
-    };
-    let fail = DefaultResponse {
-        code: 417,
-        message: "The requested user does not exist".to_string(),
-    };
-
-    return match update_result {
-        Ok(result) => match result.modified_count {
-            1 => HttpResponse::Ok().body(Body::from(match serde_json::to_string(&success) {
-                Ok(res) => res,
-                Err(_) => {
-                    return HttpResponse::InternalServerError()
-                        .body(Body::from("An error occurred while parsing the response"))
-                }
-            })),
-            _ => HttpResponse::ExpectationFailed().body(Body::from(
-                match serde_json::to_string(&fail) {
-                    Ok(res) => res,
-                    Err(_) => {
-                        return HttpResponse::InternalServerError()
-                            .body(Body::from("An error occurred while parsing the response"))
-                    }
-                },
-            )),
-        },
-        Err(err) => handle_rejection(&req, err),
-    };
+    // TODO: update user
+    placeholder_route(req)
 }
 
-pub fn generate_updated_user(req: &HttpRequest) -> UpdatableUser {
-    let mut update: HashMap<UserProperties, String> = HashMap::new();
+/*pub fn generate_updated_user(req: &HttpRequest) -> UpdatableUser {
+    /*let mut update: HashMap<UserProperties, String> = HashMap::new();
     for property in UserProperties::iter() {
         UserProperties::get_default_header_name(&property);
         match get_header_value(
@@ -76,17 +22,17 @@ pub fn generate_updated_user(req: &HttpRequest) -> UpdatableUser {
             Some(header) => update.insert(property, header),
             _ => None,
         };
-    }
+    }*/
     let mut user = UpdatableUser::new();
-    for property in update {
+    /*for property in update {
         user = UpdatableUser::update_property(user, property.0, property.1);
-    }
+    }*/
     user
 }
 
 #[derive(Clone, Debug)]
 pub struct UpdatableUser {
-    pub id: Option<ObjectId>,
+    pub id: Option<u64>,
     pub name: Option<String>,
     pub password: Option<String>,
     pub icon: Option<Option<String>>,
@@ -117,4 +63,4 @@ impl UpdatableUser {
         }
         user
     }
-}
+}*/

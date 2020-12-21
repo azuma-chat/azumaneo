@@ -1,25 +1,20 @@
-use crate::models::rejection::handle_rejection;
-use crate::models::user::User;
-use crate::util::get_header_value_simple;
-use actix_web::body::Body;
-use actix_web::{HttpRequest, HttpResponse};
+use crate::models::{error::AzumaError, user::User};
+use crate::AzumaState;
+use actix_web::{web, HttpResponse};
+use serde::Deserialize;
 
-pub async fn register_user(req: HttpRequest) -> HttpResponse {
-    //Get header values, if not present, return error
-    let username = match get_header_value_simple(&req, "name") {
-        Ok(name) => name,
-        Err(err) => return err,
-    };
+#[derive(Deserialize)]
+pub struct RegisterUserRequest {
+    name: String,
+    password: String,
+}
 
-    let passwd = match get_header_value_simple(&req, "password") {
-        Ok(passwd) => passwd,
-        Err(err) => return err,
-    };
+pub async fn register_user(
+    data: web::Data<AzumaState>,
+    request: web::Json<RegisterUserRequest>,
+) -> Result<HttpResponse, AzumaError> {
+    let _ = User::new(&request.name, &request.password, &data.db).await?;
 
-    let user = match User::new(username, passwd).await {
-        Ok(user) => user,
-        Err(err) => return handle_rejection(&req, err),
-    };
-
-    HttpResponse::Ok().body(Body::from(format!("{:?}", user)))
+    // TODO: return session for newly created user
+    Ok(HttpResponse::Ok().body(""))
 }

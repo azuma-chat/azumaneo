@@ -1,5 +1,7 @@
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
 use log::info;
+use sqlx::PgPool;
+use std::env;
 use std::net::SocketAddr;
 use tokio::{signal, sync::oneshot, task};
 
@@ -13,18 +15,28 @@ pub fn placeholder_route(req: HttpRequest) -> HttpResponse {
     HttpResponse::NotImplemented().body(response)
 }
 
+pub struct AzumaState {
+    pub db: PgPool,
+}
+
 #[actix_rt::main]
 async fn main() {
     //Swap the commented blocks for production, this is only for development purposes
+    // TODO: runtime switching
     /* let listen_addr: SocketAddr = env::var("AZUMA_HOST")
     .expect("Environment variable AZUMA_HOST not found")
     .parse()
     .expect("Couldn't parse AZUMA_HOST");*/
     let listen_addr: SocketAddr = SocketAddr::new("0.0.0.0".parse().unwrap(), 8080);
 
+    // TODO: proper configuration loading
+    let db_uri = env::var("DATABASE_URL").unwrap();
+    let db = PgPool::connect(&db_uri).await.unwrap();
+
     let (tx, _rx) = oneshot::channel();
     let server = HttpServer::new(move || {
         App::new()
+            .data(AzumaState { db: db.clone() })
             .wrap(middleware::Logger::default())
             .route("/", web::get().to(placeholder_route))
             .route("/api/info", web::to(routes::api::info::api_info))

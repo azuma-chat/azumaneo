@@ -1,33 +1,5 @@
 use crate::models::etc::DefaultResponse;
 use actix_web::{body::Body, HttpRequest, HttpResponse};
-use mongodb::{Client, Database};
-use std::env;
-
-pub async fn get_mongodb() -> Result<Database, String> {
-    let db_client = match Client::with_uri_str(match &env::var("AZUMA_MONGODB") {
-        Ok(env) => env,
-        Err(_) => {
-            print_console_err("Environment variable AZUMA_MONGODB not found".to_string());
-            return Err("Environment variable AZUMA_MONGODB not found".to_string());
-        }
-    })
-    .await
-    {
-        Ok(client) => client,
-        Err(_) => {
-            print_console_err("An error occurred while creating the MongoDB client".to_string());
-            return Err("An error occurred while creating the MongoDB client".to_string());
-        }
-    };
-    let db = db_client.database(match &env::var("AZUMA_DBNAME") {
-        Ok(env) => env,
-        Err(_) => {
-            print_console_err("Environment variable AZUMA_DBNAME not found".to_string());
-            return Err("Environment variable AZUMA_DBNAME not found".to_string());
-        }
-    });
-    Ok(db)
-}
 
 pub fn get_header_value_simple(
     req: &HttpRequest,
