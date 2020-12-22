@@ -1,8 +1,8 @@
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
 use log::info;
+use serde::Deserialize;
 use sqlx::PgPool;
-use std::env;
-use std::net::SocketAddr;
+use std::fs::read_to_string;
 use tokio::{signal, sync::oneshot, task};
 
 mod models;
@@ -15,23 +15,29 @@ pub fn placeholder_route(req: HttpRequest) -> HttpResponse {
     HttpResponse::NotImplemented().body(response)
 }
 
+#[derive(Deserialize)]
+struct AzumaConfig {
+    host_uri: String,
+    db_uri: String,
+}
+
+impl AzumaConfig {
+    fn load(path: &str) -> Self {
+        let config_string = read_to_string(path).expect("couldn't load config from provided path");
+        let config: AzumaConfig =
+            toml::from_str(&config_string).expect("couldn't deserialize config");
+        config
+    }
+}
+
 pub struct AzumaState {
     pub db: PgPool,
 }
 
 #[actix_rt::main]
 async fn main() {
-    //Swap the commented blocks for production, this is only for development purposes
-    // TODO: runtime switching
-    /* let listen_addr: SocketAddr = env::var("AZUMA_HOST")
-    .expect("Environment variable AZUMA_HOST not found")
-    .parse()
-    .expect("Couldn't parse AZUMA_HOST");*/
-    let listen_addr: SocketAddr = SocketAddr::new("0.0.0.0".parse().unwrap(), 8080);
-
-    // TODO: proper configuration loading
-    let db_uri = env::var("DATABASE_URL").unwrap();
-    let db = PgPool::connect(&db_uri).await.unwrap();
+    let config = AzumaConfig::load("config.toml");
+    let db = PgPool::connect(&config.db_uri).await.unwrap();
 
     let (tx, _rx) = oneshot::channel();
     let server = HttpServer::new(move || {
@@ -49,11 +55,11 @@ async fn main() {
     });
 
     let server = server
-        .bind(listen_addr)
-        .expect(&*format!("cannot bind to address {}", listen_addr));
+        .bind(&config.host_uri)
+        .expect(&format!("couldn't bind to address {}", &config.host_uri));
 
     task::spawn(server.run());
-    info!("Listening on {}", listen_addr);
+    info!("Listening on {}", &config.host_uri);
 
     signal::ctrl_c()
         .await
