@@ -1,13 +1,10 @@
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
-use log::info;
 use serde::Deserialize;
 use sqlx::PgPool;
 use std::fs::read_to_string;
-use tokio::{signal, sync::oneshot, task};
 
 mod models;
 mod routes;
-mod util;
 
 //define placeholder route
 pub fn placeholder_route(req: HttpRequest) -> HttpResponse {
@@ -34,12 +31,12 @@ pub struct AzumaState {
     pub db: PgPool,
 }
 
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() {
+    pretty_env_logger::init();
     let config = AzumaConfig::load("config.toml");
     let db = PgPool::connect(&config.db_uri).await.unwrap();
 
-    let (tx, _rx) = oneshot::channel();
     let server = HttpServer::new(move || {
         App::new()
             .data(AzumaState { db: db.clone() })
@@ -54,17 +51,12 @@ async fn main() {
             .route("/user/update", web::to(routes::user::update::update_user))
     });
 
-    let server = server
+    server
         .bind(&config.host_uri)
-        .expect(&format!("couldn't bind to address {}", &config.host_uri));
-
-    task::spawn(server.run());
-    info!("Listening on {}", &config.host_uri);
-
-    signal::ctrl_c()
+        .expect(&format!("couldn't bind to address {}", &config.host_uri))
+        .run()
         .await
-        .expect("Couldn't listen to CTRL-C signal");
-    let _ = tx.send(());
+        .expect("couldn't run server");
 }
 
 //TODO: implement custom 404 response
