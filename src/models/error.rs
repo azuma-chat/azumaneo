@@ -1,7 +1,7 @@
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use argon2::Error as Argon2Error;
 use serde::Serialize;
-use sqlx::Error as SqlxError;
+use sqlx::{postgres::PgDatabaseError, Error as SqlxError};
 use std::error::Error as ErrorTrait;
 use thiserror::Error;
 
@@ -11,6 +11,8 @@ pub enum AzumaError {
     AlreadyExists,
     #[error("INTERNAL_SERVER_ERROR")]
     InternalServerError { source: Box<dyn ErrorTrait> },
+    #[error("NOT_FOUND")]
+    NotFound,
 }
 
 #[derive(Serialize)]
@@ -31,6 +33,7 @@ impl ResponseError for AzumaError {
         match self {
             AlreadyExists => StatusCode::CONFLICT,
             InternalServerError { source: _ } => StatusCode::INTERNAL_SERVER_ERROR,
+            NotFound => StatusCode::NOT_FOUND,
         }
     }
 }
@@ -45,6 +48,14 @@ impl From<Argon2Error> for AzumaError {
 
 impl From<SqlxError> for AzumaError {
     fn from(err: SqlxError) -> Self {
+        // 23505 conflict
+        if let SqlxError::Database(err) = &err {
+            let err = err.downcast_ref::<PgDatabaseError>();
+            match err.code() {
+                "23505" => return AzumaError::AlreadyExists, // unique_violation
+                _ => (),
+            }
+        }
         AzumaError::InternalServerError {
             source: Box::new(err),
         }

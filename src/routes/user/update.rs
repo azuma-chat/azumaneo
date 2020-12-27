@@ -1,62 +1,44 @@
-use crate::placeholder_route;
-use actix_web::{HttpRequest, HttpResponse};
+use crate::{
+    models::{error::AzumaError, user::User},
+    AzumaState,
+};
+use actix_web::{web, HttpResponse};
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-pub async fn update_user(req: HttpRequest) -> HttpResponse {
-    //TODO: Implement session check instead of username/passwd check
-    // TODO: update user
-    placeholder_route(req)
+#[derive(Deserialize)]
+pub struct UpdateUserRequest {
+    // TODO: remove id when sessions are implemented
+    id: Uuid,
+    name: Option<String>,
+    password: Option<String>,
 }
 
-/*pub fn generate_updated_user(req: &HttpRequest) -> UpdatableUser {
-    /*let mut update: HashMap<UserProperties, String> = HashMap::new();
-    for property in UserProperties::iter() {
-        UserProperties::get_default_header_name(&property);
-        match get_header_value(
-            req,
-            format!("new_{}", UserProperties::get_default_header_name(&property)).as_str(),
-        ) {
-            Some(header) => update.insert(property, header),
-            _ => None,
-        };
-    }*/
-    let mut user = UpdatableUser::new();
-    /*for property in update {
-        user = UpdatableUser::update_property(user, property.0, property.1);
-    }*/
-    user
+#[derive(Serialize)]
+pub struct UpdateUserResponse {
+    id: Uuid,
+    name: String,
+    created: DateTime<Utc>,
 }
 
-#[derive(Clone, Debug)]
-pub struct UpdatableUser {
-    pub id: Option<u64>,
-    pub name: Option<String>,
-    pub password: Option<String>,
-    pub icon: Option<Option<String>>,
-    pub status: Option<UserStatus>,
-}
+pub async fn update_user(
+    data: web::Data<AzumaState>,
+    request: web::Json<UpdateUserRequest>,
+) -> Result<HttpResponse, AzumaError> {
+    let user = User::get_by_id(&request.id, &data.db)
+        .await?
+        .update(
+            request.name.as_deref(),
+            request.password.as_deref(),
+            &data.db,
+        )
+        .await?;
 
-impl UpdatableUser {
-    pub fn new() -> UpdatableUser {
-        UpdatableUser {
-            id: None,
-            name: None,
-            password: None,
-            icon: None,
-            status: None,
-        }
-    }
-    fn update_property(
-        mut user: UpdatableUser,
-        property: UserProperties,
-        value: String,
-    ) -> UpdatableUser {
-        match property {
-            UserProperties::NAME => user.name = Some(value),
-            UserProperties::PASSWORD => user.password = Some(value),
-            UserProperties::ICON => user.icon = Some(Some(value)),
-            UserProperties::STATUS => user.status = Some(UserStatus::from_string(value)),
-            _ => {}
-        }
-        user
-    }
-}*/
+    let response_body = UpdateUserResponse {
+        id: user.id,
+        name: user.name,
+        created: user.created,
+    };
+    Ok(HttpResponse::Ok().json(response_body))
+}
