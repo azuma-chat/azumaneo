@@ -21,7 +21,7 @@
         },
         {
           "ordinal": 3,
-          "name": "created",
+          "name": "created_at",
           "type_info": "Timestamptz"
         }
       ],
@@ -61,7 +61,7 @@
         },
         {
           "ordinal": 3,
-          "name": "created",
+          "name": "created_at",
           "type_info": "Timestamptz"
         }
       ],
@@ -73,6 +73,38 @@
       },
       "nullable": [
         false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "454b0c9070bc7824ebd2b44a6856957607fdce8e1f52b1f2e3d1cbb0c292058a": {
+    "query": "SELECT * FROM sessions WHERE token = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "token",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "subject",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
         false,
         false,
         false
@@ -100,7 +132,7 @@
         },
         {
           "ordinal": 3,
-          "name": "created",
+          "name": "created_at",
           "type_info": "Timestamptz"
         }
       ],
@@ -111,6 +143,38 @@
       },
       "nullable": [
         false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "9c59a5a7dfe5caf4af5a60f79d6b48600ab1eca39eeea3be23ff24dac6a18f7e": {
+    "query": "INSERT INTO sessions (subject) values ($1) RETURNING *",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "token",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "subject",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
         false,
         false,
         false
@@ -138,7 +202,7 @@
         },
         {
           "ordinal": 3,
-          "name": "created",
+          "name": "created_at",
           "type_info": "Timestamptz"
         }
       ],

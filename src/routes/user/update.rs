@@ -1,5 +1,5 @@
 use crate::{
-    models::{error::AzumaError, user::User},
+    models::{error::AzumaError, session::Session, user::User},
     AzumaState,
 };
 use actix_web::{web, HttpResponse};
@@ -9,8 +9,6 @@ use uuid::Uuid;
 
 #[derive(Deserialize)]
 pub struct UpdateUserRequest {
-    // TODO: remove id when sessions are implemented
-    id: Uuid,
     name: Option<String>,
     password: Option<String>,
 }
@@ -19,26 +17,26 @@ pub struct UpdateUserRequest {
 pub struct UpdateUserResponse {
     id: Uuid,
     name: String,
-    created: DateTime<Utc>,
+    created_at: DateTime<Utc>,
 }
 
 pub async fn update_user(
     data: web::Data<AzumaState>,
     request: web::Json<UpdateUserRequest>,
+    session: Session,
 ) -> Result<HttpResponse, AzumaError> {
-    let user = User::get_by_id(&request.id, &data.db)
-        .await?
-        .update(
-            request.name.as_deref(),
-            request.password.as_deref(),
-            &data.db,
-        )
-        .await?;
+    let mut user = User::get_by_id(&session.subject, &data.db).await?;
+    user.update(
+        request.name.as_deref(),
+        request.password.as_deref(),
+        &data.db,
+    )
+    .await?;
 
     let response_body = UpdateUserResponse {
         id: user.id,
         name: user.name,
-        created: user.created,
+        created_at: user.created_at,
     };
     Ok(HttpResponse::Ok().json(response_body))
 }

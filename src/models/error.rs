@@ -9,10 +9,14 @@ use thiserror::Error;
 pub enum AzumaError {
     #[error("ALREADY_EXISTS")]
     AlreadyExists,
+    #[error("FORBIDDEN")]
+    Forbidden,
     #[error("INTERNAL_SERVER_ERROR")]
     InternalServerError { source: Box<dyn ErrorTrait> },
     #[error("NOT_FOUND")]
     NotFound,
+    #[error("UNAUTHORIZED")]
+    Unauthorized,
 }
 
 #[derive(Serialize)]
@@ -32,8 +36,10 @@ impl ResponseError for AzumaError {
         use AzumaError::*;
         match self {
             AlreadyExists => StatusCode::CONFLICT,
+            Forbidden => StatusCode::FORBIDDEN,
             InternalServerError { source: _ } => StatusCode::INTERNAL_SERVER_ERROR,
             NotFound => StatusCode::NOT_FOUND,
+            Unauthorized => StatusCode::UNAUTHORIZED,
         }
     }
 }

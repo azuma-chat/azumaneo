@@ -8,12 +8,12 @@ pub struct User {
     pub id: Uuid,
     pub name: String,
     pub password: String,
-    pub created: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
     // TODO: add icon and status properties
 }
 
 impl User {
-    pub async fn new(name: &str, password: &str, db: &PgPool) -> Result<User, AzumaError> {
+    pub async fn new(name: &str, password: &str, db: &PgPool) -> Result<Self, AzumaError> {
         let hashed_password = argon2::hash_encoded(
             password.as_bytes(),
             &random::<[u8; 8]>(),
@@ -32,7 +32,7 @@ impl User {
         Ok(user)
     }
 
-    pub async fn get_by_id(id: &Uuid, db: &PgPool) -> Result<User, AzumaError> {
+    pub async fn get_by_id(id: &Uuid, db: &PgPool) -> Result<Self, AzumaError> {
         let user = query_as!(User, "SELECT * FROM users WHERE id = $1", id)
             .fetch_optional(db)
             .await?;
@@ -40,7 +40,7 @@ impl User {
         user.ok_or(AzumaError::NotFound)
     }
 
-    pub async fn get(name: &str, db: &PgPool) -> Result<User, AzumaError> {
+    pub async fn get_by_name(name: &str, db: &PgPool) -> Result<User, AzumaError> {
         let user = query_as!(User, "SELECT * FROM users WHERE name = $1", name)
             .fetch_optional(db)
             .await?;
@@ -49,11 +49,11 @@ impl User {
     }
 
     pub async fn update(
-        &self,
+        &mut self,
         name: Option<&str>,
         password: Option<&str>,
         db: &PgPool,
-    ) -> Result<User, AzumaError> {
+    ) -> Result<(), AzumaError> {
         let mut hashed_password = None;
         if let Some(password) = password {
             hashed_password = Some(argon2::hash_encoded(
@@ -72,6 +72,7 @@ impl User {
         )
         .fetch_one(db)
         .await?;
-        Ok(user)
+        *self = user;
+        Ok(())
     }
 }
