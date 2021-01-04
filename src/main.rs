@@ -7,7 +7,7 @@ use routes::{
     user::{login_user, register_user, update_user},
 };
 use serde::Deserialize;
-use sqlx::PgPool;
+use sqlx::{migrate, PgPool};
 use std::fs::read_to_string;
 
 //define placeholder route
@@ -40,6 +40,10 @@ async fn main() {
     pretty_env_logger::init();
     let config = AzumaConfig::load("config.toml");
     let db = PgPool::connect(&config.db_uri).await.unwrap();
+    migrate!("./migrations/")
+        .run(&db)
+        .await
+        .expect("couldn't run database migrations");
 
     let server = HttpServer::new(move || {
         App::new()
