@@ -1,10 +1,14 @@
+mod models;
+mod routes;
+
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
+use routes::{
+    api::api_info,
+    user::{login_user, register_user, update_user},
+};
 use serde::Deserialize;
 use sqlx::PgPool;
 use std::fs::read_to_string;
-
-mod models;
-mod routes;
 
 //define placeholder route
 pub fn placeholder_route(req: HttpRequest) -> HttpResponse {
@@ -41,14 +45,12 @@ async fn main() {
         App::new()
             .data(AzumaState { db: db.clone() })
             .wrap(middleware::Logger::default())
-            .route("/", web::get().to(placeholder_route))
-            .route("/api/info", web::to(routes::api::info::api_info))
-            .route(
-                "/user/register",
-                web::to(routes::user::register::register_user),
-            )
-            .route("/user/login", web::to(routes::user::login::login_user))
-            .route("/user/update", web::to(routes::user::update::update_user))
+            // general API routes
+            .route("/", web::get().to(api_info))
+            // user routes
+            .route("/user/register", web::post().to(register_user))
+            .route("/user/login", web::post().to(login_user))
+            .route("/user/update", web::patch().to(update_user))
     });
 
     server
