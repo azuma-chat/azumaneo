@@ -18,7 +18,7 @@ pretty_env_logger = "0.4"
 rand = "0.8"
 rust-argon2 = "0.8"
 serde = { version = "1", features = ["derive"] }
-sqlx = { version = "0.5", features = ["chrono", "macros", "migrate", "offline", "postgres", "runtime-actix-rustls", "uuid"] }
+sqlx = { version = "0.4", features = ["chrono", "macros", "migrate", "offline", "postgres", "runtime-actix-rustls", "uuid"] }
 thiserror = "1"
 toml = "0.5"
 uuid = { version = "0.8", features = ["serde"] }
