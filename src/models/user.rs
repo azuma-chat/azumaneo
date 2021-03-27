@@ -1,30 +1,31 @@
-use crate::models::error::AzumaError;
+use crate::models::error::{Argon2idError, AzumaError};
 use chrono::{DateTime, Utc};
-use rand::random;
+use sodiumoxide::crypto::pwhash::argon2id13;
 use sqlx::{query_as, types::Uuid, FromRow, PgPool};
 
 #[derive(Debug, FromRow)]
 pub struct User {
     pub id: Uuid,
     pub name: String,
-    pub password: String,
+    pub password: Vec<u8>,
     pub created_at: DateTime<Utc>,
     // TODO: add icon and status properties
 }
 
 impl User {
     pub async fn new(name: &str, password: &str, db: &PgPool) -> Result<Self, AzumaError> {
-        let hashed_password = argon2::hash_encoded(
+        let hashed_password = argon2id13::pwhash(
             password.as_bytes(),
-            &random::<[u8; 8]>(),
-            &argon2::Config::default(),
-        )?;
+            argon2id13::OPSLIMIT_INTERACTIVE,
+            argon2id13::MEMLIMIT_INTERACTIVE,
+        )
+        .map_err(|_| Argon2idError)?;
 
         let user = query_as!(
             User,
             "INSERT INTO users (name, password) values ($1, $2) RETURNING *",
             name,
-            hashed_password
+            hashed_password.as_ref()
         )
         .fetch_one(db)
         .await?;
@@ -54,20 +55,24 @@ impl User {
         password: Option<&str>,
         db: &PgPool,
     ) -> Result<(), AzumaError> {
-        let mut hashed_password = None;
-        if let Some(password) = password {
-            hashed_password = Some(argon2::hash_encoded(
-                password.as_bytes(),
-                &random::<[u8; 8]>(),
-                &argon2::Config::default(),
-            )?);
-        }
+        let hashed_password = match password {
+            Some(password) => {
+                let hashed_password = argon2id13::pwhash(
+                    password.as_bytes(),
+                    argon2id13::OPSLIMIT_INTERACTIVE,
+                    argon2id13::MEMLIMIT_INTERACTIVE,
+                )
+                .map_err(|_| Argon2idError)?;
+                Some(hashed_password)
+            }
+            None => None,
+        };
 
         let user = query_as!(
             User,
             "UPDATE users SET name = COALESCE($1, name), password = COALESCE($2, password) WHERE id = $3 RETURNING *",
             name,
-            hashed_password,
+            hashed_password.as_ref().map(|hp| hp.as_ref()),
             self.id
         )
         .fetch_one(db)

@@ -1,9 +1,15 @@
-use crate::models::{error::AzumaError, session::Session, user::User};
-use crate::AzumaState;
+use crate::{
+    models::{
+        error::{Argon2idError, AzumaError},
+        session::Session,
+        user::User,
+    },
+    AzumaState,
+};
 use actix_web::{web, HttpResponse};
-use argon2::verify_encoded;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sodiumoxide::crypto::pwhash::argon2id13::{self, HashedPassword};
 use uuid::Uuid;
 
 #[derive(Deserialize)]
@@ -46,8 +52,9 @@ pub async fn login_user(
     request: web::Json<LoginUserRequest>,
 ) -> Result<HttpResponse, AzumaError> {
     let user = User::get_by_name(&request.name, &data.db).await?;
+    let hashed_password = HashedPassword::from_slice(&user.password).ok_or(Argon2idError)?;
 
-    if verify_encoded(&user.password, request.password.as_bytes())? {
+    if argon2id13::pwhash_verify(&hashed_password, request.password.as_bytes()) {
         let session = Session::new(&user, &data.db).await?;
 
         let response_body = LoginUserResponse {

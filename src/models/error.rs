@@ -1,9 +1,12 @@
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
-use argon2::Error as Argon2Error;
 use serde::Serialize;
 use sqlx::{postgres::PgDatabaseError, Error as SqlxError};
 use std::error::Error as ErrorTrait;
 use thiserror::Error;
+
+#[derive(Debug, Error)]
+#[error("Argon2id returned an error")]
+pub struct Argon2idError;
 
 #[derive(Debug, Error)]
 pub enum AzumaError {
@@ -44,8 +47,8 @@ impl ResponseError for AzumaError {
     }
 }
 
-impl From<Argon2Error> for AzumaError {
-    fn from(err: Argon2Error) -> Self {
+impl From<Argon2idError> for AzumaError {
+    fn from(err: Argon2idError) -> Self {
         AzumaError::InternalServerError {
             source: Box::new(err),
         }
