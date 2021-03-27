@@ -58,8 +58,12 @@ impl FromRequest for Session {
                 .app_data::<Data<AzumaState>>()
                 .expect("app data missing")
                 .as_ref();
-            let session = Session::get_by_token(&token, &data.db).await?;
-            Ok(session)
+
+            match Session::get_by_token(&token, &data.db).await {
+                Ok(session) => Ok(session),
+                Err(AzumaError::NotFound) => Err(AzumaError::Unauthorized),
+                Err(err) => Err(err),
+            }
         })
     }
 }
