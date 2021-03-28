@@ -13,6 +13,7 @@ pub struct Session {
     pub token: Uuid,
     pub subject: Uuid,
     pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
 }
 
 impl Session {
@@ -28,10 +29,14 @@ impl Session {
         Ok(session)
     }
 
-    pub async fn get_by_token(token: &Uuid, db: &PgPool) -> Result<Self, AzumaError> {
-        let session = query_as!(Session, "SELECT * FROM sessions WHERE token = $1", token)
-            .fetch_optional(db)
-            .await?;
+    pub async fn get_and_renew(token: &Uuid, db: &PgPool) -> Result<Self, AzumaError> {
+        let session = query_as!(
+            Session,
+            "UPDATE sessions SET expires_at = current_timestamp + (14 * interval '1 day') WHERE token = $1 AND expires_at > current_timestamp RETURNING *",
+            token
+        )
+        .fetch_optional(db)
+        .await?;
 
         session.ok_or(AzumaError::NotFound)
     }
@@ -60,7 +65,7 @@ impl FromRequest for Session {
                 .expect("app data missing")
                 .as_ref();
 
-            match Session::get_by_token(&token, &data.db).await {
+            match Session::get_and_renew(&token, &data.db).await {
                 Ok(session) => Ok(session),
                 Err(AzumaError::NotFound) => Err(AzumaError::Unauthorized),
                 Err(err) => Err(err),
