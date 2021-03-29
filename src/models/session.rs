@@ -22,8 +22,8 @@ impl Session {
             "INSERT INTO sessions (subject) values ($1) RETURNING *",
             subject.id
         )
-        .fetch_one(db)
-        .await?;
+            .fetch_one(db)
+            .await?;
 
         Ok(session)
     }
@@ -40,7 +40,7 @@ impl Session {
 impl FromRequest for Session {
     type Config = ();
     type Error = AzumaError;
-    type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
+    type Future = Pin<Box<dyn Future<Output=Result<Self, Self::Error>>>>;
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
         let req = req.clone();
         Box::pin(async move {

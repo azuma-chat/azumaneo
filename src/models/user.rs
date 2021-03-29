@@ -1,7 +1,8 @@
-use crate::models::error::AzumaError;
 use chrono::{DateTime, Utc};
 use rand::random;
-use sqlx::{query_as, types::Uuid, FromRow, PgPool};
+use sqlx::{FromRow, PgPool, query_as, types::Uuid};
+
+use crate::models::error::AzumaError;
 
 #[derive(Debug, FromRow)]
 pub struct User {
@@ -26,8 +27,8 @@ impl User {
             name,
             hashed_password
         )
-        .fetch_one(db)
-        .await?;
+            .fetch_one(db)
+            .await?;
 
         Ok(user)
     }
@@ -70,8 +71,8 @@ impl User {
             hashed_password,
             self.id
         )
-        .fetch_one(db)
-        .await?;
+            .fetch_one(db)
+            .await?;
         *self = user;
         Ok(())
     }
