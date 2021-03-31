@@ -22,7 +22,7 @@ pub fn placeholder_route(req: HttpRequest) -> HttpResponse {
     let response = format!("Welcome to Azuma!\nUnfortunately the requested route '{path}' is not available yet. Please come back later.", path = req.path());
     HttpResponse::NotImplemented().body(response)
 }
-const AwspVersion: u8 = 1;
+const AWSP_VERSION: u8 = 1;
 
 #[derive(Deserialize)]
 struct AzumaConfig {
@@ -56,7 +56,7 @@ async fn main() {
     let config = AzumaConfig::load("config.toml");
     let db = PgPool::connect(&config.db_uri).await.unwrap();
     let constants = AzumaConstants {
-        awsp_version: AwspVersion,
+        awsp_version: AWSP_VERSION,
     };
     migrate!("./migrations/")
         .run(&db)
@@ -65,7 +65,11 @@ async fn main() {
 
     let server = HttpServer::new(move || {
         App::new()
-            .data(AzumaState {db: db.clone(), srv: ChatServer::new(db.clone()).start(), constants: constants.clone()})
+            .data(AzumaState {
+                db: db.clone(),
+                srv: ChatServer::new(db.clone()).start(),
+                constants: constants.clone(),
+            })
             .wrap(middleware::Logger::default())
             // general API routes
             .route("/", web::get().to(api_info))
@@ -78,7 +82,7 @@ async fn main() {
 
     server
         .bind(&config.host_uri)
-        .expect(&format!("couldn't bind to address {}", &config.host_uri))
+        .unwrap_or_else(|_| panic!("couldn't bind to address {}", &config.host_uri))
         .run()
         .await
         .expect("couldn't run server");

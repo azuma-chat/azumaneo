@@ -1,32 +1,31 @@
 use actix::{
-    fut, Actor, ActorContext, ActorFuture, AsyncContext, ContextFutureSpawner, Handler, Running,
-    StreamHandler, WrapFuture,
+    fut, Actor, ActorContext, ActorFuture, AsyncContext, ContextFutureSpawner, Handler, Message,
+    Running, StreamHandler, WrapFuture,
 };
 use actix_web::web;
 use actix_web_actors::ws;
-use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::models::awsp::error::AwspErrorType;
-use crate::models::awsp::wrapper::AwspMsgType::Auth;
 use crate::models::awsp::wrapper::{AwspMsgType, AwspWrapper};
 use crate::models::error::AzumaError;
 use crate::models::session::Session;
 use crate::websocket::chatserver;
 use crate::AzumaState;
-use std::ops::Deref;
-use std::str::FromStr;
-use crate::websocket::chatserver::Message;
 use std::collections::HashMap;
-use tokio::sync::oneshot;
-use std::thread::{Thread, sleep};
-use std::time::Duration;
+use std::str::FromStr;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Message)]
+#[rtype(response = "Ws")]
 pub struct Ws {
     pub session_id: Uuid,
     pub user_id: Option<Uuid>,
     pub state: web::Data<AzumaState>,
+}
+#[derive(Message, Debug)]
+#[rtype(response = "()")]
+pub struct UpdateRequest {
+    pub ws: Ws,
+    pub to_update: Uuid,
 }
 
 impl Actor for Ws {
@@ -46,7 +45,7 @@ impl Actor for Ws {
         self.state
             .srv
             .send(chatserver::Connect {
-                addr: addr.recipient(),
+                addr,
                 id: self.session_id,
             })
             .into_actor(self)
@@ -83,7 +82,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                         self.state.srv.do_send(AwspWrapper {
                             version: self.state.constants.awsp_version.to_string(),
                             msg_type: AwspMsgType::Error,
-                            content: AwspErrorType::BadRequest.into_hm(),
+                            content: AzumaError::BadRequest.into_hm(),
                         });
                         return;
                     }
@@ -94,14 +93,86 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                             self.state.srv.do_send(AwspWrapper {
                                 version: self.state.constants.awsp_version.to_string(),
                                 msg_type: AwspMsgType::Error,
-                                content: AwspErrorType::Unauthorized.into_hm(),
+                                content: AzumaError::Unauthorized.into_hm(),
                             });
                             return;
                         } else {
+                            //let (sx, rx) = channel();
+                            let db = self.state.get_ref().db.clone();
+                            let mut s = self.clone();
+                            async move {
+                                match Session::get_by_token(
+                                    &match Uuid::from_str(match wrapper.content.get("token") {
+                                        None => {
+                                            return Err(AzumaError::Unauthorized);
+                                        }
+                                        Some(token) => token,
+                                    }) {
+                                        Err(_) => {
+                                            return Err(AzumaError::Unauthorized);
+                                        }
+                                        Ok(token) => token,
+                                    },
+                                    &db,
+                                )
+                                .await
+                                {
+                                    Ok(session) => return Ok(session.subject),
+                                    Err(err) => {
+                                        return Err(err);
+                                    }
+                                };
+                            }
+                            .into_actor(self)
+                            .map(move |res, _act, ctx| {
+                                let uuid = match res {
+                                    Ok(uuid) => uuid,
+                                    Err(_) => {
+                                        ctx.text("error!".to_string());
+                                        return;
+                                    }
+                                };
+                                s.user_id = Some(uuid);
+                                s.state.get_ref().srv.do_send(UpdateRequest {
+                                    ws: s.clone(),
+                                    to_update: s.session_id,
+                                });
+                                s.state.srv.do_send(AwspWrapper {
+                                    version: s.state.constants.awsp_version.to_string(),
+                                    msg_type: AwspMsgType::Welcome,
+                                    content: {
+                                        let mut hm: HashMap<String, String> = HashMap::new();
+                                        hm.insert("userid".to_string(), format!("{:?}", s.user_id));
+                                        hm
+                                    },
+                                });
+                            })
+                            .spawn(ctx);
 
-                            //TODO impl auth mechanism
-                            
+                            /*let subject = match rx
+                                .recv()
+                                .expect("sth went wrong while fetching the session")
+                            {
+                                Ok(subj) => subj,
+                                Err(err) => {
+                                    self.state.srv.do_send(err.into_wrapper(&self.state));
+                                    return;
+                                }
+                            };*/
+                            // self.user_id = Some(subject);
 
+                            //let fut = async move || -> Result<Ws, AzumaError> {
+                            //
+                            //};
+
+                            //fut.into_actor(self).spawn(ctx);
+                            //let fut = actix::fut::wrap_future::<_, Self>(fut());
+                            //let x = ctx.spawn(fut);
+                            //let mut rt = actix_web::rt::Runtime::new().unwrap();
+                            //let ws = actix_web::rt::Runtime::block_on(&mut rt, fut());
+
+                            //println!("{:?}", ws);
+                            //ctx.text(format!("{:?}", self.user_id));
                         }
                     }
                     Some(usrid) => {
@@ -110,6 +181,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                 };
             }
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
+            Ok(ws::Message::Close(reason)) => {
+                println!("closereason: {:?}", reason);
+                ctx.close(reason)
+            }
             _ => (),
         }
     }
@@ -121,5 +196,16 @@ impl Handler<chatserver::Message> for Ws {
 
     fn handle(&mut self, msg: chatserver::Message, ctx: &mut Self::Context) {
         ctx.text(msg.0);
+    }
+}
+
+/// Update self as requested by the chatserver actor.
+/// This happens for example when authenticating after establishing a websocket connection.
+impl Handler<UpdateRequest> for Ws {
+    type Result = ();
+
+    fn handle<'a>(&'a mut self, msg: UpdateRequest, _ctx: &mut Self::Context) {
+        *self = msg.ws;
+        println!("self after modifying: {:?}", self);
     }
 }

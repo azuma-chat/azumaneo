@@ -1,29 +1,26 @@
-use std::collections::{HashMap};
+use std::collections::HashMap;
 
 use actix::prelude::*;
 use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::models::awsp::wrapper::AwspWrapper;
-use crate::models::awsp::error::AwspError;
+use crate::websocket::handler::{UpdateRequest as WsUpdateRequest, Ws};
 
 #[derive(Message)]
 #[rtype(result = "Uuid")]
-struct Msg(Uuid);
-
+struct UuidWrapper(Uuid);
 
 /// Chat server sends this messages to session
 #[derive(Message, Clone)]
 #[rtype(result = "()")]
 pub struct Message(pub String);
 
-/// Message for chat server communications
-
 /// New chat session is created
 #[derive(Message)]
 #[rtype(result = "Uuid")]
 pub struct Connect {
-    pub addr: Recipient<Message>,
+    pub addr: Addr<Ws>,
     pub id: Uuid,
 }
 
@@ -64,7 +61,7 @@ pub struct Join {
 #[derive(Clone, Debug)]
 pub struct ChatServer {
     ///This map holds all sessions and their ids
-    pub sessions: HashMap<Uuid, Recipient<Message>>,
+    pub sessions: HashMap<Uuid, Addr<Ws>>,
     ///Database
     pub db: PgPool,
 }
@@ -73,13 +70,13 @@ impl ChatServer {
     pub fn new(db: PgPool) -> ChatServer {
         ChatServer {
             sessions: HashMap::new(),
-            db: db,
+            db,
         }
     }
     /// broadcast message to all users
     pub fn broadcast_all_str(&self, message: &str) {
-        for (_sess_id, addr) in &self.sessions {
-            let _ = addr.do_send(Message(message.to_owned()));
+        for addr in self.sessions.values() {
+            addr.do_send(Message(message.to_owned()));
         }
     }
 
@@ -115,7 +112,6 @@ impl Handler<Connect> for ChatServer {
     }
 }
 
-
 /// Handler for Disconnect message.
 impl Handler<Disconnect> for ChatServer {
     type Result = ();
@@ -123,21 +119,8 @@ impl Handler<Disconnect> for ChatServer {
     #[allow(unused_must_use)]
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
         println!("{} disconnected", msg.id);
-
-        let db = self.db.clone();
         // remove address from sessions map
         self.sessions.remove(&msg.id);
-
-        //remove saved wssession id from the database
-        /*actix_web::rt::spawn(async move {
-            let sess = match Session::get_by_wssession(&msg.id.to_string(), &db).await {
-                Ok(sess) => sess,
-                Err(_) => {
-                    return info!("The ID of the leaving was never registered!");
-                }
-            };
-            Session::rm_wssession(sess.borrow(), &db).await;
-        });*/
     }
 }
 
@@ -161,21 +144,26 @@ impl Handler<AwspWrapper> for ChatServer {
     }
 }
 
-impl Handler<AwspError> for ChatServer {
-    type Result = ();
+impl Handler<UuidWrapper> for ChatServer {
+    type Result = MessageResult<UuidWrapper>;
 
-    fn handle(&mut self, msg: AwspError, _: &mut Context<Self>) {
-        //this should be safe as the struct is generated internally
-        let json = serde_json::to_string(&msg)
-            .expect("An error occurred while translating message to json");
-        self.broadcast_all_str(json.as_str());
+    fn handle(&mut self, msg: UuidWrapper, _: &mut Context<Self>) -> Self::Result {
+        MessageResult(msg.0)
     }
 }
 
-impl Handler<Msg> for ChatServer {
-    type Result = MessageResult<Msg>;
+impl Handler<WsUpdateRequest> for ChatServer {
+    type Result = ();
 
-    fn handle(&mut self, msg: Msg, _: &mut Context<Self>) -> Self::Result {
-        MessageResult(msg.0)
+    fn handle(&mut self, msg: WsUpdateRequest, _: &mut Context<Self>) -> Self::Result {
+        let recipient = self
+            .sessions
+            .get(&msg.to_update)
+            .expect("this ws does not exist!");
+        println!("In chatserver req: {:?}", msg);
+        recipient.do_send(WsUpdateRequest {
+            ws: msg.ws,
+            to_update: msg.to_update,
+        });
     }
 }

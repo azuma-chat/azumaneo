@@ -1,14 +1,19 @@
+use actix::Message;
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use argon2::Error as Argon2Error;
 use serde::Serialize;
 use sqlx::{postgres::PgDatabaseError, Error as SqlxError};
 use std::error::Error as ErrorTrait;
 use thiserror::Error;
+use std::collections::HashMap;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Message)]
+#[rtype(response = "()")]
 pub enum AzumaError {
     #[error("ALREADY_EXISTS")]
     AlreadyExists,
+    #[error("BAD_REQUEST")]
+    BadRequest,
     #[error("FORBIDDEN")]
     Forbidden,
     #[error("INTERNAL_SERVER_ERROR")]
@@ -36,6 +41,7 @@ impl ResponseError for AzumaError {
         use AzumaError::*;
         match self {
             AlreadyExists => StatusCode::CONFLICT,
+            BadRequest => StatusCode::BAD_REQUEST,
             Forbidden => StatusCode::FORBIDDEN,
             InternalServerError { source: _ } => StatusCode::INTERNAL_SERVER_ERROR,
             NotFound => StatusCode::NOT_FOUND,
@@ -57,13 +63,18 @@ impl From<SqlxError> for AzumaError {
         // 23505 conflict
         if let SqlxError::Database(err) = &err {
             let err = err.downcast_ref::<PgDatabaseError>();
-            match err.code() {
-                "23505" => return AzumaError::AlreadyExists, // unique_violation
-                _ => (),
-            }
+            if let "23505" = err.code() { return AzumaError::AlreadyExists }
         }
         AzumaError::InternalServerError {
             source: Box::new(err),
         }
+    }
+}
+
+impl AzumaError {
+    pub fn into_hm(self) -> HashMap<String, String> {
+        let mut hm = HashMap::new();
+        hm.insert("errortype".to_string(), format!("{}", self));
+        hm
     }
 }

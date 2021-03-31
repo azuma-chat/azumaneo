@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use rand::random;
-use sqlx::{FromRow, PgPool, query_as, types::Uuid};
+use sqlx::{query_as, types::Uuid, FromRow, PgPool};
 
 use crate::models::error::AzumaError;
 
@@ -27,8 +27,8 @@ impl User {
             name,
             hashed_password
         )
-            .fetch_one(db)
-            .await?;
+        .fetch_one(db)
+        .await?;
 
         Ok(user)
     }

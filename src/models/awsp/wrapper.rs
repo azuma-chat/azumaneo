@@ -38,5 +38,5 @@ pub enum AwspMsgType {
     StopTyping,
 
     ///Indicates that a error has occured. For more details look at the `errortype` field of the content
-    Error
+    Error,
 }
