@@ -1,2 +1,3 @@
+pub mod channelhandler;
 pub mod chatserver;
-pub mod handler;
+pub mod ws_connection_handler;

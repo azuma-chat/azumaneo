@@ -149,6 +149,36 @@
       ]
     }
   },
+  "89fcef38a7d897fe89f0088c061c5a0551c346e5102843ce38c9c5a3b05b7ccc": {
+    "query": "SELECT * FROM textchannels",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "name",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "description",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false,
+        false,
+        true
+      ]
+    }
+  },
   "9c59a5a7dfe5caf4af5a60f79d6b48600ab1eca39eeea3be23ff24dac6a18f7e": {
     "query": "INSERT INTO sessions (subject) values ($1) RETURNING *",
     "describe": {

@@ -1,4 +1,4 @@
-use crate::websocket::handler::Ws;
+use crate::websocket::ws_connection_handler::Ws;
 use crate::AzumaState;
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;

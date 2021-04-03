@@ -1,7 +1,4 @@
-use actix::{
-    fut, Actor, ActorContext, ActorFuture, AsyncContext, ContextFutureSpawner, Handler, Message,
-    Running, StreamHandler, WrapFuture,
-};
+use actix::{fut, Actor, ActorContext, ActorFuture, AsyncContext, ContextFutureSpawner, Handler, Message, Running, StreamHandler, WrapFuture};
 use actix_web::web;
 use actix_web_actors::ws;
 use uuid::Uuid;
@@ -13,6 +10,10 @@ use crate::websocket::chatserver;
 use crate::AzumaState;
 use std::collections::HashMap;
 use std::str::FromStr;
+use crate::websocket::channelhandler::{MessageSendRequest, MessageSentEvent};
+use crate::models::message::ChatMessage;
+use chrono::{Utc};
+use actix_broker::BrokerSubscribe;
 
 #[derive(Clone, Debug, Message)]
 #[rtype(response = "Ws")]
@@ -42,6 +43,7 @@ impl Actor for Ws {
         // HttpContext::state() is instance of WsChatSessionState, state is shared
         // across all routes within application
         let addr = ctx.address();
+        self.subscribe_system_async::<MessageSentEvent>(ctx);
         self.state
             .srv
             .send(chatserver::Connect {
@@ -74,10 +76,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
         match msg {
             Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
             Ok(ws::Message::Text(text)) => {
-                println!("{}", text);
                 let wrapper: AwspWrapper = match serde_json::from_str(text.trim()) {
                     Ok(wrapper) => wrapper,
-                    //TODO: don't make worker crash on unparsable input
                     Err(_err) => {
                         self.state.srv.do_send(AwspWrapper {
                             version: self.state.constants.awsp_version.to_string(),
@@ -97,7 +97,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                             });
                             return;
                         } else {
-                            //let (sx, rx) = channel();
                             let db = self.state.get_ref().db.clone();
                             let mut s = self.clone();
                             async move {
@@ -149,34 +148,17 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                             })
                             .spawn(ctx);
 
-                            /*let subject = match rx
-                                .recv()
-                                .expect("sth went wrong while fetching the session")
-                            {
-                                Ok(subj) => subj,
-                                Err(err) => {
-                                    self.state.srv.do_send(err.into_wrapper(&self.state));
-                                    return;
-                                }
-                            };*/
-                            // self.user_id = Some(subject);
-
-                            //let fut = async move || -> Result<Ws, AzumaError> {
-                            //
-                            //};
-
-                            //fut.into_actor(self).spawn(ctx);
-                            //let fut = actix::fut::wrap_future::<_, Self>(fut());
-                            //let x = ctx.spawn(fut);
-                            //let mut rt = actix_web::rt::Runtime::new().unwrap();
-                            //let ws = actix_web::rt::Runtime::block_on(&mut rt, fut());
-
-                            //println!("{:?}", ws);
-                            //ctx.text(format!("{:?}", self.user_id));
                         }
                     }
                     Some(usrid) => {
-                        println!("userid: {:?}", usrid)
+                        self.state.channelhandler.do_send(MessageSendRequest(ChatMessage {
+                            id: Uuid::new_v4(),
+                            author: usrid,
+                            channel: Default::default(),
+                            content: wrapper.content.get("msg").unwrap().clone(),
+                            timestamp: Utc::now()
+                        }))
+
                     }
                 };
             }
@@ -206,6 +188,24 @@ impl Handler<UpdateRequest> for Ws {
 
     fn handle<'a>(&'a mut self, msg: UpdateRequest, _ctx: &mut Self::Context) {
         *self = msg.ws;
-        println!("self after modifying: {:?}", self);
+    }
+}
+
+impl Handler<MessageSentEvent> for Ws {
+    type Result = ();
+
+    fn handle(&mut self, msg: MessageSentEvent, ctx: &mut Self::Context) -> Self::Result {
+        let mut content: HashMap<String, String> = HashMap::new();
+        content.insert("author".to_string(), msg.0.author.to_string());
+        content.insert("content".to_string(), msg.0.content);
+        content.insert("id".to_string(), msg.0.id.to_string());
+        content.insert("channel".to_string(), msg.0.channel.to_string());
+        content.insert("timestamp".to_string(), msg.0.timestamp.to_string());
+        let wrapper = AwspWrapper {
+            version: self.state.constants.awsp_version.to_string(),
+            msg_type: AwspMsgType::MessageSent,
+            content,
+        };
+        ctx.text(wrapper.to_string());
     }
 }

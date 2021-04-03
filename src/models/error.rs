@@ -3,9 +3,9 @@ use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use argon2::Error as Argon2Error;
 use serde::Serialize;
 use sqlx::{postgres::PgDatabaseError, Error as SqlxError};
+use std::collections::HashMap;
 use std::error::Error as ErrorTrait;
 use thiserror::Error;
-use std::collections::HashMap;
 
 #[derive(Debug, Error, Message)]
 #[rtype(response = "()")]
@@ -63,7 +63,9 @@ impl From<SqlxError> for AzumaError {
         // 23505 conflict
         if let SqlxError::Database(err) = &err {
             let err = err.downcast_ref::<PgDatabaseError>();
-            if let "23505" = err.code() { return AzumaError::AlreadyExists }
+            if let "23505" = err.code() {
+                return AzumaError::AlreadyExists;
+            }
         }
         AzumaError::InternalServerError {
             source: Box::new(err),
@@ -72,6 +74,7 @@ impl From<SqlxError> for AzumaError {
 }
 
 impl AzumaError {
+    ///Insert the provided AzumaError variant into a HashMap with the key 'errortype' for returning the error via a websocket connection
     pub fn into_hm(self) -> HashMap<String, String> {
         let mut hm = HashMap::new();
         hm.insert("errortype".to_string(), format!("{}", self));

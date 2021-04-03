@@ -12,6 +12,7 @@ use routes::{
 };
 
 use crate::websocket::chatserver::ChatServer;
+use crate::websocket::channelhandler::{ChannelHandler};
 
 mod models;
 mod routes;
@@ -43,10 +44,11 @@ impl AzumaConfig {
         config
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AzumaState {
     pub db: PgPool,
     pub srv: Addr<ChatServer>,
+    pub channelhandler: Addr<ChannelHandler>,
     pub constants: AzumaConstants,
 }
 
@@ -64,10 +66,13 @@ async fn main() {
         .expect("couldn't run database migrations");
 
     let server = HttpServer::new(move || {
+
+
         App::new()
             .data(AzumaState {
                 db: db.clone(),
                 srv: ChatServer::new(db.clone()).start(),
+                channelhandler: ChannelHandler::new(db.clone()).start(),
                 constants: constants.clone(),
             })
             .wrap(middleware::Logger::default())

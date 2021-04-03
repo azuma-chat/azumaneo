@@ -5,7 +5,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::models::awsp::wrapper::AwspWrapper;
-use crate::websocket::handler::{UpdateRequest as WsUpdateRequest, Ws};
+use crate::websocket::ws_connection_handler::{UpdateRequest as WsUpdateRequest, Ws};
 
 #[derive(Message)]
 #[rtype(result = "Uuid")]
@@ -138,8 +138,7 @@ impl Handler<AwspWrapper> for ChatServer {
 
     fn handle(&mut self, msg: AwspWrapper, _: &mut Context<Self>) {
         //this should be safe as the struct is generated internally
-        let json = serde_json::to_string(&msg)
-            .expect("An error occurred while translating message to json");
+        let json = msg.to_string();
         self.broadcast_all_str(json.as_str());
     }
 }
@@ -159,8 +158,7 @@ impl Handler<WsUpdateRequest> for ChatServer {
         let recipient = self
             .sessions
             .get(&msg.to_update)
-            .expect("this ws does not exist!");
-        println!("In chatserver req: {:?}", msg);
+            .expect("The websocket session tried to update does not exist!");
         recipient.do_send(WsUpdateRequest {
             ws: msg.ws,
             to_update: msg.to_update,

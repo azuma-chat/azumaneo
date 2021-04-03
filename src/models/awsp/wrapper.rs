@@ -11,6 +11,12 @@ pub struct AwspWrapper {
     pub content: HashMap<String, String>,
 }
 
+impl ToString for AwspWrapper {
+    fn to_string(&self) -> String {
+        serde_json::to_string(self).expect("An error occurred while translating message to json")
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum AwspMsgType {
     ///Used to authenticate the websocket session before any other communication is allowed
@@ -22,8 +28,8 @@ pub enum AwspMsgType {
     ///This is used when a client is attempting to send a message
     SendMessage,
 
-    ///This is used when a client send a message and the server is now broadcasting to all users with access to the specific channel
-    UserMessage,
+    ///This variant is used to indicate that a message was sent
+    MessageSent,
 
     ///This is used if a client attempts to change it's online status
     ChangeOnlineStatus,
