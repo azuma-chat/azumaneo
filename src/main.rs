@@ -11,8 +11,9 @@ use routes::{
     user::{login_user, register_user, update_user},
 };
 
+use crate::routes::send_msg::send_msg;
+use crate::websocket::channelhandler::ChannelHandler;
 use crate::websocket::chatserver::ChatServer;
-use crate::websocket::channelhandler::{ChannelHandler};
 
 mod models;
 mod routes;
@@ -66,8 +67,6 @@ async fn main() {
         .expect("couldn't run database migrations");
 
     let server = HttpServer::new(move || {
-
-
         App::new()
             .data(AzumaState {
                 db: db.clone(),
@@ -83,6 +82,7 @@ async fn main() {
             .route("/user/login", web::post().to(login_user))
             .route("/user/update", web::patch().to(update_user))
             .route("/init_ws", web::get().to(init_ws))
+            .route("/message/send", web::post().to(send_msg))
     });
 
     server
