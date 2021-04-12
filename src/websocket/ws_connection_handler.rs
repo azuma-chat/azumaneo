@@ -1,19 +1,22 @@
-use actix::{fut, Actor, ActorContext, ActorFuture, AsyncContext, ContextFutureSpawner, Handler, Message, Running, StreamHandler, WrapFuture};
+use actix::{
+    fut, Actor, ActorContext, ActorFuture, AsyncContext, ContextFutureSpawner, Handler, Message,
+    Running, StreamHandler, WrapFuture,
+};
 use actix_web::web;
 use actix_web_actors::ws;
 use uuid::Uuid;
 
 use crate::models::awsp::wrapper::{AwspMsgType, AwspWrapper};
 use crate::models::error::AzumaError;
+use crate::models::message::ChatMessage;
 use crate::models::session::Session;
+use crate::websocket::channelhandler::{MessageSendRequest, MessageSentEvent};
 use crate::websocket::chatserver;
 use crate::AzumaState;
+use actix_broker::BrokerSubscribe;
+use chrono::Utc;
 use std::collections::HashMap;
 use std::str::FromStr;
-use crate::websocket::channelhandler::{MessageSendRequest, MessageSentEvent};
-use crate::models::message::ChatMessage;
-use chrono::{Utc};
-use actix_broker::BrokerSubscribe;
 
 #[derive(Clone, Debug, Message)]
 #[rtype(response = "Ws")]
@@ -147,18 +150,18 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                                 });
                             })
                             .spawn(ctx);
-
                         }
                     }
                     Some(usrid) => {
-                        self.state.channelhandler.do_send(MessageSendRequest(ChatMessage {
-                            id: Uuid::new_v4(),
-                            author: usrid,
-                            channel: Default::default(),
-                            content: wrapper.content.get("msg").unwrap().clone(),
-                            timestamp: Utc::now()
-                        }))
-
+                        self.state
+                            .channelhandler
+                            .do_send(MessageSendRequest(ChatMessage {
+                                id: Uuid::new_v4(),
+                                author: usrid,
+                                channel: Default::default(),
+                                content: wrapper.content.get("msg").unwrap().clone(),
+                                timestamp: Utc::now(),
+                            }))
                     }
                 };
             }

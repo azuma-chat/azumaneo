@@ -1,11 +1,11 @@
 use crate::models::error::AzumaError;
+use crate::models::message::ChatMessage;
 use crate::models::textchannel::TextChannel;
 use actix::prelude::*;
+use actix_broker::BrokerIssue;
 use sqlx::{query_as, PgPool};
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use uuid::Uuid;
-use crate::models::message::ChatMessage;
-use actix_broker::{BrokerIssue};
 
 #[derive(Clone, Debug)]
 pub struct ChannelHandler {
@@ -20,7 +20,6 @@ pub struct MessageSentEvent(pub ChatMessage);
 #[derive(Message, Clone)]
 #[rtype(response = "()")]
 pub struct MessageSendRequest(pub ChatMessage);
-
 
 #[derive(Message)]
 #[rtype(response = "()")]
@@ -72,7 +71,6 @@ impl Handler<MessageSendRequest> for ChannelHandler {
         self.issue_system_async(MessageSentEvent(msg.0));
     }
 }
-
 
 //helper functions
 
