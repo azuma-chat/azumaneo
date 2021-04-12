@@ -22,6 +22,7 @@ pub struct SendMessageResponse {
 
 pub async fn send_msg(
     send_request: web::Json<SendMessageRequest>,
+    session: Session,
     state: web::Data<AzumaState>,
 ) -> Result<HttpResponse, AzumaError> {
     let userid = Session::get_and_renew(&send_request.token, &state.db)
@@ -31,7 +32,7 @@ pub async fn send_msg(
         .channelhandler
         .do_send(MessageSendRequest(ChatMessage {
             id: Uuid::new_v4(),
-            author: userid,
+            author: session.subject,
             channel: send_request.channel_id.clone(),
             content: send_request.content.clone(),
             timestamp: Utc::now(),
