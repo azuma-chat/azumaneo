@@ -75,8 +75,8 @@ impl User {
             hashed_password.as_ref().map(|hp| hp.as_ref()),
             self.id
         )
-        .fetch_one(db)
-        .await?;
+            .fetch_one(db)
+            .await?;
         *self = user;
         Ok(())
     }

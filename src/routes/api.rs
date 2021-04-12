@@ -14,7 +14,7 @@ pub fn api_info() -> HttpResponse {
     let response_body = ApiInfoResponse {
         name: env!("CARGO_PKG_NAME"),
         version: env!("CARGO_PKG_VERSION"),
-        authors: env!("CARGO_PKG_AUTHORS").split(":").collect(),
+        authors: env!("CARGO_PKG_AUTHORS").split(':').collect(),
         license: env!("CARGO_PKG_LICENSE"),
     };
     HttpResponse::Ok().json(response_body)
