@@ -4,6 +4,7 @@ use actix::{
 };
 use actix_web::web;
 use actix_web_actors::ws;
+use chrono::Utc;
 use uuid::Uuid;
 
 use crate::models::awsp::wrapper::{AwspMsgType, AwspWrapper};
@@ -12,11 +13,15 @@ use crate::models::message::ChatMessage;
 use crate::models::session::Session;
 use crate::websocket::channelhandler::{MessageSendRequest, MessageSentEvent};
 use crate::websocket::chatserver;
+use crate::websocket::chatserver::UpdateUserOnlinestatus;
 use crate::AzumaState;
 use actix_broker::BrokerSubscribe;
 use chrono::Utc;
 use std::collections::HashMap;
 use std::str::FromStr;
+
+/// The `Ws` struct and actors are used to represent a single websocket connection with the azuma server.
+/// The actor can handle various internal messages between the actors and send them to its corresponding client using its [`Ws::Context`]
 
 #[derive(Clone, Debug, Message)]
 #[rtype(response = "Ws")]
@@ -38,8 +43,6 @@ impl Actor for Ws {
     /// Method is called on actor start.
     /// We register ws session with chatserver
     fn started(&mut self, ctx: &mut Self::Context) {
-        // we'll start heartbeat process on session start.
-
         // register self in chat chatserver. `AsyncContext::wait` register
         // future within context, but context waits until this future resolves
         // before processing any other events.
@@ -47,6 +50,7 @@ impl Actor for Ws {
         // across all routes within application
         let addr = ctx.address();
         self.subscribe_system_async::<MessageSentEvent>(ctx);
+        self.subscribe_system_async::<UpdateUserOnlinestatus>(ctx);
         self.state
             .srv
             .send(chatserver::Connect {
@@ -144,7 +148,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                                     msg_type: AwspMsgType::Welcome,
                                     content: {
                                         let mut hm: HashMap<String, String> = HashMap::new();
-                                        hm.insert("userid".to_string(), format!("{:?}", s.user_id));
+                                        hm.insert(
+                                            "userid".to_string(),
+                                            format!("{}", s.user_id.unwrap()),
+                                        );
                                         hm
                                     },
                                 });
@@ -207,6 +214,25 @@ impl Handler<MessageSentEvent> for Ws {
         let wrapper = AwspWrapper {
             version: self.state.constants.awsp_version.to_string(),
             msg_type: AwspMsgType::MessageSent,
+            content,
+        };
+        ctx.text(wrapper.to_string());
+    }
+}
+
+impl Handler<UpdateUserOnlinestatus> for Ws {
+    type Result = ();
+
+    fn handle(&mut self, msg: UpdateUserOnlinestatus, ctx: &mut Self::Context) -> Self::Result {
+        let mut content: HashMap<String, String> = HashMap::new();
+        content.insert("status".to_string(), format!("{:?}", &msg.status));
+        content.insert(
+            "user".to_string(),
+            serde_json::to_string(&msg.user).unwrap(),
+        );
+        let wrapper = AwspWrapper {
+            version: self.state.constants.awsp_version.to_string(),
+            msg_type: AwspMsgType::ChangeOnlineStatus,
             content,
         };
         ctx.text(wrapper.to_string());

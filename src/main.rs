@@ -83,6 +83,10 @@ async fn main() {
             .route("/user/update", web::patch().to(update_user))
             .route("/init_ws", web::get().to(init_ws))
             .route("/message/send", web::post().to(send_msg))
+            .route(
+                "/user/onlinestatus",
+                web::post().to(routes::onlinestatus::update_onlinestatus),
+            )
     });
 
     server

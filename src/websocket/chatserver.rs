@@ -1,15 +1,24 @@
 use std::collections::HashMap;
 
 use actix::prelude::*;
+use actix_broker::BrokerIssue;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+use crate::models::awsp::etc::OnlineStatus;
 use crate::models::awsp::wrapper::AwspWrapper;
 use crate::websocket::ws_connection_handler::{UpdateRequest as WsUpdateRequest, Ws};
 
 #[derive(Message)]
 #[rtype(result = "Uuid")]
 struct UuidWrapper(Uuid);
+
+#[derive(Message, Clone)]
+#[rtype(result = "()")]
+pub struct UpdateUserOnlinestatus {
+    pub user: Uuid,
+    pub status: OnlineStatus,
+}
 
 /// Chat server sends this messages to session
 #[derive(Message, Clone)]
@@ -58,10 +67,19 @@ pub struct Join {
     pub name: String,
 }
 
+/// Only used for debugging.<br>
+/// This triggers a complete debug formatted print of the [`ChatServer`] struct
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct Debug;
+
+/// The `ChatServer` actor is used to coordinate all websocket communications
 #[derive(Clone, Debug)]
 pub struct ChatServer {
     ///This map holds all sessions and their ids
     pub sessions: HashMap<Uuid, Addr<Ws>>,
+    /// This HashMap holds every user who has a currently connected ws session and the corresponding online status
+    pub onlinestatuses: HashMap<Uuid, OnlineStatus>,
     ///Database
     pub db: PgPool,
 }
@@ -70,6 +88,7 @@ impl ChatServer {
     pub fn new(db: PgPool) -> ChatServer {
         ChatServer {
             sessions: HashMap::new(),
+            onlinestatuses: HashMap::new(),
             db,
         }
     }
@@ -91,14 +110,14 @@ impl ChatServer {
     }
 }
 
-/// Make actor from `ChatServer`
+/// Make actor from [`ChatServer`]
 impl Actor for ChatServer {
     /// We are going to use simple Context, we just need ability to communicate
     /// with other actors.
     type Context = Context<Self>;
 }
 
-/// Handler for Connect message.
+/// Handler for Connect message. <br>
 /// Register new session and assign unique id to this session
 impl Handler<Connect> for ChatServer {
     type Result = MessageResult<Connect>;
@@ -106,7 +125,10 @@ impl Handler<Connect> for ChatServer {
     #[allow(unused_must_use)]
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
         self.sessions.insert(msg.id, msg.addr);
-
+        //TODO: remember the last online state of the user
+        if !self.onlinestatuses.contains_key(&msg.id) {
+            self.onlinestatuses.insert(msg.id, OnlineStatus::Online);
+        }
         // send id back
         MessageResult(msg.id)
     }
@@ -163,5 +185,15 @@ impl Handler<WsUpdateRequest> for ChatServer {
             ws: msg.ws,
             to_update: msg.to_update,
         });
+    }
+}
+
+impl Handler<UpdateUserOnlinestatus> for ChatServer {
+    type Result = ();
+
+    fn handle(&mut self, msg: UpdateUserOnlinestatus, _ctx: &mut Context<Self>) -> Self::Result {
+        self.onlinestatuses.remove(&msg.user);
+        self.onlinestatuses.insert(msg.user, msg.status);
+        self.issue_system_async(msg);
     }
 }

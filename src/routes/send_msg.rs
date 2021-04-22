@@ -10,7 +10,6 @@ use uuid::Uuid;
 
 #[derive(Deserialize, Clone)]
 pub struct SendMessageRequest {
-    token: Uuid,
     channel_id: Uuid,
     content: String,
 }

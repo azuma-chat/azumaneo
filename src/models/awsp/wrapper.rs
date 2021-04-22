@@ -31,11 +31,8 @@ pub enum AwspMsgType {
     ///This variant is used to indicate that a message was sent
     MessageSent,
 
-    ///This is used if a client attempts to change it's online status
+    /// If a users onlinestatus is changed, this is sent to all clients
     ChangeOnlineStatus,
-
-    ///This is the message the server sends to the clients when a user changed its online
-    UserOnlineStatus,
 
     ///This is fired whenever a user starts or stops to type
     SendTyping,
