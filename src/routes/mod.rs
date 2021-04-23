@@ -2,7 +2,7 @@
     This is the home of all http routes accessible via the api
 
 */
-// allow unused import here, because its needed to make the internal doc link () wor
+// allow unused import here, because its needed to make the internal doc link work
 #[allow(unused_imports)]
 use crate::models::user::User;
 
