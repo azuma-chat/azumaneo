@@ -43,11 +43,6 @@ impl Actor for Ws {
     /// Method is called on actor start.
     /// We register ws session with chatserver
     fn started(&mut self, ctx: &mut Self::Context) {
-        // register self in chat chatserver. `AsyncContext::wait` register
-        // future within context, but context waits until this future resolves
-        // before processing any other events.
-        // HttpContext::state() is instance of WsChatSessionState, state is shared
-        // across all routes within application
         let addr = ctx.address();
         self.subscribe_system_async::<MessageSentEvent>(ctx);
         self.subscribe_system_async::<UpdateUserOnlinestatus>(ctx);
@@ -70,7 +65,7 @@ impl Actor for Ws {
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
-        // notify chat chatserver
+        // notify chatserver
         self.state.srv.do_send(chatserver::Disconnect {
             id: self.session_id,
         });
@@ -201,6 +196,7 @@ impl Handler<UpdateRequest> for Ws {
     }
 }
 
+//
 impl Handler<MessageSentEvent> for Ws {
     type Result = ();
 

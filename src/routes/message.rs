@@ -8,17 +8,19 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+#[doc(hidden)]
 #[derive(Deserialize, Clone)]
 pub struct SendMessageRequest {
     channel_id: Uuid,
     content: String,
 }
 
+#[doc(hidden)]
 #[derive(Serialize)]
 pub struct SendMessageResponse {
     id: Uuid,
 }
-
+/// This routes purpose is to send a chat message in the name of a user
 pub async fn send_msg(
     send_request: web::Json<SendMessageRequest>,
     session: Session,

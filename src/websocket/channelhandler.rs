@@ -7,20 +7,26 @@ use sqlx::{query_as, PgPool};
 use std::collections::HashMap;
 use uuid::Uuid;
 
+/// The ChannelHandler is responsible for everything related to channels (e.g. sending messages, typing events etc).
 #[derive(Clone, Debug)]
 pub struct ChannelHandler {
     db: PgPool,
     textchannels: HashMap<Uuid, TextChannel>,
 }
 
+/// This event is fired by the channelhandler actor if there is a message to be sent
 #[derive(Message, Clone)]
 #[rtype(response = "()")]
 pub struct MessageSentEvent(pub ChatMessage);
 
+/// This actor message is used by a ws actor in order to indicate that the user requested to send a message
 #[derive(Message, Clone)]
 #[rtype(response = "()")]
 pub struct MessageSendRequest(pub ChatMessage);
 
+/// `UpdateSelf` is used to update the channelhandler out of an asynchronous context
+///
+/// **NOTE:** **Everyone with access to the channelhandlers address can send this message** and currently there are **no permission checks** in place in order to check the messages origin!
 #[derive(Message)]
 #[rtype(response = "()")]
 struct UpdateSelf(ChannelHandler);
@@ -33,10 +39,11 @@ impl ChannelHandler {
         }
     }
 }
-
+/// We need to implement [`Actor`] for [`ChannelHandler`] otherwise it wouldn't be able to act like an actor
 impl Actor for ChannelHandler {
     type Context = Context<Self>;
-
+    /// Triggered on actor startup
+    /// loads up all the channels from the database and stores them
     fn started(&mut self, ctx: &mut Self::Context) {
         let s = self.clone();
         let mut t = self.clone();
@@ -56,6 +63,7 @@ impl Actor for ChannelHandler {
     }
 }
 
+/// Update self
 impl Handler<UpdateSelf> for ChannelHandler {
     type Result = ();
 
@@ -64,6 +72,7 @@ impl Handler<UpdateSelf> for ChannelHandler {
     }
 }
 
+/// This handler processes the message sending requests from clients
 impl Handler<MessageSendRequest> for ChannelHandler {
     type Result = ();
 
@@ -72,8 +81,7 @@ impl Handler<MessageSendRequest> for ChannelHandler {
     }
 }
 
-//helper functions
-
+/// Helper function which is used during startup to load up all the textchannels from the db
 async fn load_textchannels(db: &PgPool) -> Result<HashMap<Uuid, TextChannel>, AzumaError> {
     let query = query_as!(TextChannel, "SELECT * FROM textchannels")
         .fetch_all(db)

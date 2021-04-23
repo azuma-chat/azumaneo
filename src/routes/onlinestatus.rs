@@ -5,11 +5,12 @@ use crate::AzumaState;
 use actix_web::{web, HttpResponse};
 use serde::Deserialize;
 
+#[doc(hidden)]
 #[derive(Deserialize)]
 pub struct UpdateOnlinestatusRequest {
     pub status: OnlineStatus,
 }
-
+/// This route is used to update a users own onlinestatus
 pub async fn update_onlinestatus(
     req: web::Json<UpdateOnlinestatusRequest>,
     session: Session,

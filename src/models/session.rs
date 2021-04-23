@@ -43,7 +43,6 @@ impl Session {
 }
 
 impl FromRequest for Session {
-    type Config = ();
     type Error = AzumaError;
     type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
 

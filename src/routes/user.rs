@@ -12,17 +12,19 @@ use serde::{Deserialize, Serialize};
 use sodiumoxide::crypto::pwhash::argon2id13::{self, HashedPassword};
 use uuid::Uuid;
 
+#[doc(hidden)]
 #[derive(Deserialize)]
 pub struct RegisterUserRequest {
     name: String,
     password: String,
 }
 
+#[doc(hidden)]
 #[derive(Serialize)]
 pub struct RegisterUserResponse {
     token: Uuid,
 }
-
+/// Register a given user to the azuma database
 pub async fn register_user(
     data: web::Data<AzumaState>,
     request: web::Json<RegisterUserRequest>,
@@ -36,17 +38,20 @@ pub async fn register_user(
     Ok(HttpResponse::Created().json(response_body))
 }
 
+#[doc(hidden)]
 #[derive(Deserialize)]
 pub struct LoginUserRequest {
     name: String,
     password: String,
 }
 
+#[doc(hidden)]
 #[derive(Serialize)]
 pub struct LoginUserResponse {
     token: Uuid,
 }
 
+/// Try to login a user and respond with a valid session token
 pub async fn login_user(
     data: web::Data<AzumaState>,
     request: web::Json<LoginUserRequest>,
@@ -66,12 +71,14 @@ pub async fn login_user(
     }
 }
 
+#[doc(hidden)]
 #[derive(Deserialize)]
 pub struct UpdateUserRequest {
     name: Option<String>,
     password: Option<String>,
 }
 
+#[doc(hidden)]
 #[derive(Serialize)]
 pub struct UpdateUserResponse {
     id: Uuid,
@@ -79,6 +86,7 @@ pub struct UpdateUserResponse {
     created_at: DateTime<Utc>,
 }
 
+/// Update a users details
 pub async fn update_user(
     data: web::Data<AzumaState>,
     request: web::Json<UpdateUserRequest>,

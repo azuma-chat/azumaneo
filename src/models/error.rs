@@ -11,6 +11,7 @@ use thiserror::Error;
 #[error("Argon2id returned an error")]
 pub struct Argon2idError;
 
+/// The AzumaError is used if an error occures somewhere. Its used internally the same as its used in communication with the clients.
 #[derive(Debug, Error, Message)]
 #[rtype(response = "()")]
 pub enum AzumaError {
@@ -28,6 +29,7 @@ pub enum AzumaError {
     Unauthorized,
 }
 
+/// This is a helper struct we need in order to be able to return AzumaError from functions without building a http response first
 #[derive(Serialize)]
 struct ResponseBody {
     message: String,
@@ -40,7 +42,7 @@ impl ResponseError for AzumaError {
         };
         HttpResponse::build(self.status_code()).json(response_body)
     }
-
+    /// Map http statuscodes to the corresponding [`AzumaError`] variants
     fn status_code(&self) -> StatusCode {
         use AzumaError::*;
         match self {
