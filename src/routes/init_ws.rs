@@ -1,9 +1,11 @@
-use crate::websocket::ws_connection_handler::Ws;
-use crate::AzumaState;
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use uuid::Uuid;
 
+use crate::websocket::ws_connection_handler::Ws;
+use crate::AzumaState;
+
+/// This route responds to clients wanting to upgrade their connection to a websocket
 pub(crate) async fn init_ws(
     req: HttpRequest,
     stream: web::Payload,
@@ -18,6 +20,10 @@ pub(crate) async fn init_ws(
         &req,
         stream,
     );
-    println!("upgrading connection from {:?}", req.peer_addr());
+    println!(
+        "upgrading connection from {}:{}",
+        req.peer_addr().unwrap().ip(),
+        req.peer_addr().unwrap().port()
+    );
     resp
 }

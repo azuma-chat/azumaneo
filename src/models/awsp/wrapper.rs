@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use actix::Message;
 use serde::{Deserialize, Serialize};
 
+///
 #[derive(Serialize, Deserialize, Debug, Message, Clone)]
 #[rtype(result = "()")]
 pub struct AwspWrapper {
@@ -16,7 +17,7 @@ impl ToString for AwspWrapper {
         serde_json::to_string(self).expect("An error occurred while translating message to json")
     }
 }
-
+/// The `AwspMsgType` tells the client what the server tries to communicate and what fields to expect in the `content` field of the wrapper
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum AwspMsgType {
     ///Used to authenticate the websocket session before any other communication is allowed
@@ -31,11 +32,8 @@ pub enum AwspMsgType {
     ///This variant is used to indicate that a message was sent
     MessageSent,
 
-    ///This is used if a client attempts to change it's online status
+    /// If a users onlinestatus is changed, this is sent to all clients
     ChangeOnlineStatus,
-
-    ///This is the message the server sends to the clients when a user changed its online
-    UserOnlineStatus,
 
     ///This is fired whenever a user starts or stops to type
     SendTyping,

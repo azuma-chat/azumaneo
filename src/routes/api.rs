@@ -1,6 +1,7 @@
 use actix_web::HttpResponse;
 use serde::Serialize;
 
+#[doc(hidden)]
 #[derive(Serialize)]
 pub struct ApiInfoResponse<'a> {
     name: &'a str,
@@ -8,7 +9,7 @@ pub struct ApiInfoResponse<'a> {
     authors: Vec<&'a str>,
     license: &'a str,
 }
-
+/// This route just responds with some info about azumaneo
 pub fn api_info() -> HttpResponse {
     //TODO: Implement '/api/info' route
     let response_body = ApiInfoResponse {

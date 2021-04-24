@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use sodiumoxide::crypto::pwhash::argon2id13;
 use sqlx::{query_as, types::Uuid, FromRow, PgPool};
 
+/// The representation of a user account
 #[derive(Debug, FromRow)]
 pub struct User {
     pub id: Uuid,
@@ -13,6 +14,7 @@ pub struct User {
 }
 
 impl User {
+    /// Create a new user in the database and return it
     pub async fn new(name: &str, password: &str, db: &PgPool) -> Result<Self, AzumaError> {
         let hashed_password = argon2id13::pwhash(
             password.as_bytes(),
@@ -33,6 +35,7 @@ impl User {
         Ok(user)
     }
 
+    /// Get a user by his/her id
     pub async fn get_by_id(id: &Uuid, db: &PgPool) -> Result<Self, AzumaError> {
         let user = query_as!(User, "SELECT * FROM users WHERE id = $1", id)
             .fetch_optional(db)
@@ -41,6 +44,7 @@ impl User {
         user.ok_or(AzumaError::NotFound)
     }
 
+    /// Get a user by his/her name
     pub async fn get_by_name(name: &str, db: &PgPool) -> Result<User, AzumaError> {
         let user = query_as!(User, "SELECT * FROM users WHERE name = $1", name)
             .fetch_optional(db)
@@ -49,6 +53,7 @@ impl User {
         user.ok_or(AzumaError::NotFound)
     }
 
+    /// Update a user
     pub async fn update(
         &mut self,
         name: Option<&str>,
