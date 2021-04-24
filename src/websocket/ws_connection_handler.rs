@@ -16,13 +16,11 @@ use crate::websocket::chatserver;
 use crate::websocket::chatserver::UpdateUserOnlinestatus;
 use crate::AzumaState;
 use actix_broker::BrokerSubscribe;
-use chrono::Utc;
 use std::collections::HashMap;
 use std::str::FromStr;
 
 /// The `Ws` struct and actors are used to represent a single websocket connection with the azuma server.
 /// The actor can handle various internal messages between the actors and send them to its corresponding client using its [`Ws::Context`]
-
 #[derive(Clone, Debug, Message)]
 #[rtype(response = "Ws")]
 pub struct Ws {
@@ -30,11 +28,25 @@ pub struct Ws {
     pub user_id: Option<Uuid>,
     pub state: web::Data<AzumaState>,
 }
+
 #[derive(Message, Debug)]
 #[rtype(response = "()")]
 pub struct UpdateRequest {
     pub ws: Ws,
     pub to_update: Uuid,
+}
+
+impl Ws {
+    /// Safely send text to the corresponding client
+    // If a user is not authenticated he is not supposed to receive any kind of data from the server.
+    // If there is no user_id saved, this means that the user has not authenticated yet and any communication should be blocked!
+    fn send_text(&self, ctx: &mut <Ws as Actor>::Context, text: String) -> Result<(), AzumaError> {
+        if self.user_id == None {
+            return Err(AzumaError::Unauthorized);
+        }
+        ctx.text(text);
+        Ok(())
+    }
 }
 
 impl Actor for Ws {
@@ -125,11 +137,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                                 };
                             }
                             .into_actor(self)
-                            .map(move |res, _act, ctx| {
+                            .map(move |res, _act, _ctx| {
                                 let uuid = match res {
                                     Ok(uuid) => uuid,
                                     Err(_) => {
-                                        ctx.text("error!".to_string());
                                         return;
                                     }
                                 };
@@ -181,8 +192,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
 impl Handler<chatserver::Message> for Ws {
     type Result = ();
 
+    // its ok to ignore this result, because we can just discard the message
+    #[allow(unused_must_use)]
     fn handle(&mut self, msg: chatserver::Message, ctx: &mut Self::Context) {
-        ctx.text(msg.0);
+        self.send_text(ctx, msg.0);
     }
 }
 
@@ -191,15 +204,15 @@ impl Handler<chatserver::Message> for Ws {
 impl Handler<UpdateRequest> for Ws {
     type Result = ();
 
-    fn handle<'a>(&'a mut self, msg: UpdateRequest, _ctx: &mut Self::Context) {
+    fn handle(&mut self, msg: UpdateRequest, _ctx: &mut Self::Context) {
         *self = msg.ws;
     }
 }
 
-//
 impl Handler<MessageSentEvent> for Ws {
     type Result = ();
 
+    #[allow(unused_must_use)]
     fn handle(&mut self, msg: MessageSentEvent, ctx: &mut Self::Context) -> Self::Result {
         let mut content: HashMap<String, String> = HashMap::new();
         content.insert("author".to_string(), msg.0.author.to_string());
@@ -212,13 +225,15 @@ impl Handler<MessageSentEvent> for Ws {
             msg_type: AwspMsgType::MessageSent,
             content,
         };
-        ctx.text(wrapper.to_string());
+        // its ok to ignore this result, because we can just discard the message
+        self.send_text(ctx, wrapper.to_string());
     }
 }
 
 impl Handler<UpdateUserOnlinestatus> for Ws {
     type Result = ();
 
+    #[allow(unused_must_use)]
     fn handle(&mut self, msg: UpdateUserOnlinestatus, ctx: &mut Self::Context) -> Self::Result {
         let mut content: HashMap<String, String> = HashMap::new();
         content.insert("status".to_string(), format!("{:?}", &msg.status));
@@ -231,6 +246,7 @@ impl Handler<UpdateUserOnlinestatus> for Ws {
             msg_type: AwspMsgType::ChangeOnlineStatus,
             content,
         };
-        ctx.text(wrapper.to_string());
+        // its ok to ignore this result, because we can just discard the message
+        self.send_text(ctx, wrapper.to_string());
     }
 }

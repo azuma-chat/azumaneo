@@ -26,9 +26,6 @@ pub async fn send_msg(
     session: Session,
     state: web::Data<AzumaState>,
 ) -> Result<HttpResponse, AzumaError> {
-    let userid = Session::get_and_renew(&send_request.token, &state.db)
-        .await?
-        .subject;
     state
         .channelhandler
         .do_send(MessageSendRequest(ChatMessage {

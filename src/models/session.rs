@@ -45,6 +45,7 @@ impl Session {
 impl FromRequest for Session {
     type Error = AzumaError;
     type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
+    type Config = ();
 
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
         let req = req.clone();
