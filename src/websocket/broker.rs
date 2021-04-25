@@ -13,7 +13,6 @@ use uuid::Uuid;
 struct SubManager<S: Clone + Eq + Hash, T: Clone + Eq + Hash> {
     subscribers: HashMap<S, HashSet<T>>,
     topics: HashMap<T, HashSet<S>>,
-    id: Uuid,
 }
 
 impl<S: Clone + Eq + Hash, T: Clone + Eq + Hash> SubManager<S, T> {
@@ -21,7 +20,6 @@ impl<S: Clone + Eq + Hash, T: Clone + Eq + Hash> SubManager<S, T> {
         SubManager {
             subscribers: HashMap::new(),
             topics: HashMap::new(),
-            id: Uuid::new_v4(),
         }
     }
 
