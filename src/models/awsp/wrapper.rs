@@ -1,14 +1,28 @@
-use std::collections::HashMap;
-
+use crate::models::message::ChatMessage;
 use actix::Message;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use uuid::Uuid;
 
-///
+#[derive(Deserialize)]
+#[serde(tag = "type", content = "content")]
+pub enum AwspRequestMessage {
+    Authenticate { token: Uuid },
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type", content = "content")]
+pub enum AwspResponseMessage {
+    Error { message: String },
+    Message(ChatMessage),
+    Welcome,
+}
+
 #[derive(Serialize, Deserialize, Debug, Message, Clone)]
 #[rtype(result = "()")]
 pub struct AwspWrapper {
     pub version: String,
-    pub msg_type: AwspMsgType,
+    pub msg_type: AwspMessageTypex,
     pub content: HashMap<String, String>,
 }
 
@@ -17,9 +31,10 @@ impl ToString for AwspWrapper {
         serde_json::to_string(self).expect("An error occurred while translating message to json")
     }
 }
-/// The `AwspMsgType` tells the client what the server tries to communicate and what fields to expect in the `content` field of the wrapper
+
+/// The `AwspMessageTypex` tells the client what the server tries to communicate and what fields to expect in the `content` field of the wrapper
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum AwspMsgType {
+pub enum AwspMessageTypex {
     ///Used to authenticate the websocket session before any other communication is allowed
     Auth,
 

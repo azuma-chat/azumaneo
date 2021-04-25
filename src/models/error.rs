@@ -1,10 +1,8 @@
-use std::collections::HashMap;
-use std::error::Error as ErrorTrait;
-
-use actix::Message;
+use actix::{MailboxError, Message};
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use serde::Serialize;
 use sqlx::{postgres::PgDatabaseError, Error as SqlxError};
+use std::error::Error as ErrorTrait;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -42,6 +40,7 @@ impl ResponseError for AzumaError {
         };
         HttpResponse::build(self.status_code()).json(response_body)
     }
+
     /// Map http statuscodes to the corresponding [`AzumaError`] variants
     fn status_code(&self) -> StatusCode {
         use AzumaError::*;
@@ -64,6 +63,14 @@ impl From<Argon2idError> for AzumaError {
     }
 }
 
+impl From<MailboxError> for AzumaError {
+    fn from(err: MailboxError) -> Self {
+        AzumaError::InternalServerError {
+            source: Box::new(err),
+        }
+    }
+}
+
 impl From<SqlxError> for AzumaError {
     fn from(err: SqlxError) -> Self {
         // 23505 conflict
@@ -73,17 +80,9 @@ impl From<SqlxError> for AzumaError {
                 return AzumaError::AlreadyExists;
             }
         }
+
         AzumaError::InternalServerError {
             source: Box::new(err),
         }
-    }
-}
-
-impl AzumaError {
-    ///Insert the provided AzumaError variant into a HashMap with the key 'errortype' for returning the error via a websocket connection
-    pub fn into_hm(self) -> HashMap<String, String> {
-        let mut hm = HashMap::new();
-        hm.insert("errortype".to_string(), format!("{}", self));
-        hm
     }
 }

@@ -12,17 +12,17 @@ license = "AGPL-3.0-or-later"
 
 [dependencies]
 actix = "0.10"
-actix-broker = "0.3.1"
+actix-broker = "0.3"
 actix-web = "3"
-actix-web-actors = "3.0"
-async-trait = "0.1.48"
+actix-web-actors = "3"
+async-trait = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
 futures-util = "0.3"
 log = "0.4"
 pretty_env_logger = "0.4"
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1.0"
+serde_json = "1"
 sodiumoxide = "0.2"
 sqlx = { version = "0.4", features = ["chrono", "macros", "migrate", "offline", "postgres", "runtime-actix-rustls", "uuid"] }
 thiserror = "1"

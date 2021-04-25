@@ -1,25 +1,14 @@
+use crate::{websocket::connection::Ws, AzumaState};
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
-use uuid::Uuid;
-
-use crate::websocket::ws_connection_handler::Ws;
-use crate::AzumaState;
 
 /// This route responds to clients wanting to upgrade their connection to a websocket
 pub(crate) async fn init_ws(
+    data: web::Data<AzumaState>,
     req: HttpRequest,
     stream: web::Payload,
-    state: web::Data<AzumaState>,
 ) -> Result<HttpResponse, Error> {
-    let resp = ws::start(
-        Ws {
-            session_id: Uuid::new_v4(),
-            user_id: None,
-            state,
-        },
-        &req,
-        stream,
-    );
+    let resp = ws::start(Ws { data }, &req, stream);
     println!(
         "upgrading connection from {}:{}",
         req.peer_addr().unwrap().ip(),

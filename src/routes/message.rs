@@ -1,7 +1,5 @@
-use crate::models::error::AzumaError;
-use crate::models::message::ChatMessage;
 use crate::models::session::Session;
-use crate::websocket::channelhandler::MessageSendRequest;
+use crate::models::{error::AzumaError, message::ChatMessage};
 use crate::AzumaState;
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
@@ -11,7 +9,7 @@ use uuid::Uuid;
 #[doc(hidden)]
 #[derive(Deserialize, Clone)]
 pub struct SendMessageRequest {
-    channel_id: Uuid,
+    channel: Uuid,
     content: String,
 }
 
@@ -20,21 +18,20 @@ pub struct SendMessageRequest {
 pub struct SendMessageResponse {
     id: Uuid,
 }
+
 /// This routes purpose is to send a chat message in the name of a user
 pub async fn send_msg(
-    send_request: web::Json<SendMessageRequest>,
-    session: Session,
     state: web::Data<AzumaState>,
+    request: web::Json<SendMessageRequest>,
+    session: Session,
 ) -> Result<HttpResponse, AzumaError> {
-    state
-        .channelhandler
-        .do_send(MessageSendRequest(ChatMessage {
-            id: Uuid::new_v4(),
-            author: session.subject,
-            channel: send_request.channel_id.clone(),
-            content: send_request.content.clone(),
-            timestamp: Utc::now(),
-        }));
+    state.broker.do_send(ChatMessage {
+        id: Uuid::new_v4(),
+        author: session.subject,
+        channel: request.channel.clone(),
+        content: request.content.clone(),
+        timestamp: Utc::now(),
+    });
 
     Ok(HttpResponse::Ok().finish())
 }

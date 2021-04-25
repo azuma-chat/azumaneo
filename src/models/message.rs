@@ -1,9 +1,10 @@
 use actix::prelude::*;
 use chrono::{DateTime, Utc};
+use serde::Serialize;
 use uuid::Uuid;
 
 /// This represents a chat message a user sends to a given channel
-#[derive(Message, Clone)]
+#[derive(Clone, Message, Serialize)]
 #[rtype(response = "()")]
 pub struct ChatMessage {
     pub id: Uuid,

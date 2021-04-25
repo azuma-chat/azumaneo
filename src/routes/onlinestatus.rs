@@ -1,6 +1,5 @@
 use crate::models::awsp::etc::OnlineStatus;
 use crate::models::session::Session;
-use crate::websocket::chatserver::UpdateUserOnlinestatus;
 use crate::AzumaState;
 use actix_web::{web, HttpResponse};
 use serde::Deserialize;
@@ -16,9 +15,10 @@ pub async fn update_onlinestatus(
     session: Session,
     state: web::Data<AzumaState>,
 ) -> HttpResponse {
-    state.srv.do_send(UpdateUserOnlinestatus {
+    /*state.srv.do_send(UpdateUserOnlinestatus {
         user: session.subject,
         status: *req.status,
-    });
+    });*/
+    // TODO: set online status here
     HttpResponse::Ok().finish()
 }
