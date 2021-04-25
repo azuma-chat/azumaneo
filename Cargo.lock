@@ -26,17 +26,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "actix-broker"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e075eaa04b5a9a1b36ce801fa338f7d477f6b5f28d5f8339a8c2baba5beec33"
-dependencies = [
- "actix",
- "fnv",
- "log",
-]
-
-[[package]]
 name = "actix-codec"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -428,12 +417,9 @@ name = "azumaneo"
 version = "0.1.0"
 dependencies = [
  "actix",
- "actix-broker",
  "actix-web",
  "actix-web-actors",
- "async-trait",
  "chrono",
- "futures-util",
  "log",
  "pretty_env_logger",
  "rand 0.8.3",
