@@ -1,21 +1,25 @@
 //! Welcome to azumaneo! We want to make it as easy as possible for possible collaborators to help us improve azuma so please don't hesitate to open a github issue or contact us by email :)
 
-mod models;
-mod routes;
-mod websocket;
+use std::fs::read_to_string;
 
 use actix::{Actor, Addr};
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
+use serde::Deserialize;
+use sqlx::{migrate, PgPool};
+
 use routes::{
     api::api_info,
     init_ws::init_ws,
     message::send_msg,
     user::{login_user, register_user, update_user},
 };
-use serde::Deserialize;
-use sqlx::{migrate, PgPool};
-use std::fs::read_to_string;
 use websocket::broker::Broker;
+
+use crate::websocket::channelhandler::ChannelHandler;
+
+mod models;
+mod routes;
+mod websocket;
 
 /// This route just serves as a placeholder in case a specific path is reserved for future use, but the feature is not ready for production yet.
 pub fn placeholder_route(req: HttpRequest) -> HttpResponse {
@@ -40,9 +44,11 @@ impl AzumaConfig {
     }
 }
 
+#[derive(Clone)]
 pub struct AzumaState {
     pub db: PgPool,
     pub broker: Addr<Broker>,
+    pub channelhandler: Addr<ChannelHandler>,
 }
 
 #[actix_web::main]
@@ -54,15 +60,19 @@ async fn main() {
         .run(&db)
         .await
         .expect("couldn't run database migrations");
-    let broker = Broker::new(db.clone()).start();
 
+    let broker = Broker::new(db.clone()).start();
+    let channelhandler = ChannelHandler::new(db.clone()).start();
+
+    let state = AzumaState {
+        db: db.clone(),
+        broker: broker.clone(),
+        channelhandler: channelhandler.clone(),
+    };
     // start the http server, set the http routes and state data
     let server = HttpServer::new(move || {
         App::new()
-            .data(AzumaState {
-                db: db.clone(),
-                broker: broker.clone(),
-            })
+            .data(state.clone())
             .wrap(middleware::Logger::default())
             // general API routes
             .route("/", web::get().to(api_info))

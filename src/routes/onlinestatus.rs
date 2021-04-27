@@ -11,9 +11,9 @@ pub struct UpdateOnlinestatusRequest {
 }
 /// This route is used to update a users own onlinestatus
 pub async fn update_onlinestatus(
-    req: web::Json<UpdateOnlinestatusRequest>,
-    session: Session,
-    state: web::Data<AzumaState>,
+    _req: web::Json<UpdateOnlinestatusRequest>,
+    _session: Session,
+    _state: web::Data<AzumaState>,
 ) -> HttpResponse {
     /*state.srv.do_send(UpdateUserOnlinestatus {
         user: session.subject,

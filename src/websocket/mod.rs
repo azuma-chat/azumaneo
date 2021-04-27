@@ -12,4 +12,5 @@
 */
 
 pub mod broker;
+pub mod channelhandler;
 pub mod connection;

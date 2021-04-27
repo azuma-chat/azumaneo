@@ -40,6 +40,70 @@
       ]
     }
   },
+  "1beabf5f4c30eccdb50d7b20870cc2ac6b21cb8260f9fbde2b14326f2d128182": {
+    "query": "SELECT * FROM textchannels WHERE id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "name",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "description",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true
+      ]
+    }
+  },
+  "1bec99c6f814146985fc18f70a36158f49296dea059b872ddb46b6a760cc0774": {
+    "query": "INSERT INTO textchannels (name) VALUES ($1) RETURNING *",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "name",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "description",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true
+      ]
+    }
+  },
   "3a64dde57749268bd35318f5ddf506f00797d4de07fc11711c721eab16723bcd": {
     "query": "INSERT INTO users (name, password) values ($1, $2) RETURNING *",
     "describe": {
@@ -76,6 +140,39 @@
         false,
         false,
         false
+      ]
+    }
+  },
+  "6b28b38368e6a8721c3539d0cdcfaab0e92170e8b0a981cba8d367696236c267": {
+    "query": "INSERT INTO textchannels (name, description) VALUES ($1, $2) RETURNING *",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "name",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 2,
+          "name": "description",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        true
       ]
     }
   },
