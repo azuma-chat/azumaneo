@@ -11,5 +11,5 @@ pub struct ChatMessage {
     pub author: Uuid,
     pub channel: Uuid,
     pub content: String,
-    pub timestamp: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
 }

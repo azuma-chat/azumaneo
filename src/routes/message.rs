@@ -30,7 +30,7 @@ pub async fn send_msg(
         author: session.subject,
         channel: request.channel.clone(),
         content: request.content.clone(),
-        timestamp: Utc::now(),
+        created_at: Utc::now(),
     });
 
     Ok(HttpResponse::Ok().finish())
