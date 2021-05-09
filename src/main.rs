@@ -55,6 +55,7 @@ pub struct AzumaState {
 async fn main() {
     pretty_env_logger::init();
     let config = AzumaConfig::load("config.toml");
+    // Fix for "mismatched types" error in query_as! macro: https://docs.rs/sqlx/0.4.0-beta.1/sqlx/macro.query_as.html#troubleshooting-error-mismatched-types
     let db = PgPool::connect(&config.db_uri).await.unwrap();
     migrate!("./migrations/")
         .run(&db)

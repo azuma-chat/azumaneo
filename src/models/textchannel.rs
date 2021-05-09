@@ -33,6 +33,7 @@ impl TextChannel {
     }
 
     pub async fn get_by_id(db: &PgPool, id: &Uuid) -> Result<Self, AzumaError> {
+        //TODO: We need to implement some sort of cache later on
         Ok(
             query_as!(TextChannel, "SELECT * FROM textchannels WHERE id = $1", id)
                 .fetch_one(db)

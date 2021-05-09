@@ -27,8 +27,8 @@ pub async fn send_msg(
 ) -> Result<HttpResponse, AzumaError> {
     state.broker.do_send(ChatMessage {
         id: Uuid::new_v4(),
-        author: session.subject,
-        channel: request.channel.clone(),
+        authorid: session.subject,
+        channelid: request.channel.clone(),
         content: request.content.clone(),
         created_at: Utc::now(),
     });

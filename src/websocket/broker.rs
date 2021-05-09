@@ -123,7 +123,7 @@ impl Handler<ChatMessage> for Broker {
     type Result = ();
 
     fn handle(&mut self, msg: ChatMessage, _ctx: &mut Self::Context) {
-        for sub in self.channel_subs.get_subs(&msg.channel) {
+        for sub in self.channel_subs.get_subs(&msg.channelid) {
             sub.do_send(msg.clone());
         }
     }
