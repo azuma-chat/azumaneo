@@ -32,7 +32,7 @@ impl ToString for AwspWrapper {
     }
 }
 
-/// The `AwspMessageTypex` tells the client what the server tries to communicate and what fields to expect in the `content` field of the wrapper
+/// The `AwspMessageType` tells the client what the server tries to communicate and what fields to expect in the `content` field of the wrapper
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum AwspMessageTypex {
     ///Used to authenticate the websocket session before any other communication is allowed

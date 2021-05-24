@@ -62,7 +62,7 @@ async fn main() {
         .await
         .expect("couldn't run database migrations");
 
-    let broker = Broker::new(db.clone()).start();
+    let broker = Broker::new().start();
     let channelhandler = ChannelHandler::new(db.clone()).start();
 
     let state = AzumaState {

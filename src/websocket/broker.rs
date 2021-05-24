@@ -3,7 +3,6 @@ use crate::{
     websocket::connection::Ws,
 };
 use actix::{Actor, Addr, Context, Handler, Message};
-use sqlx::PgPool;
 use std::{
     collections::{HashMap, HashSet},
     hash::Hash,
@@ -74,13 +73,13 @@ impl<S: Clone + Eq + Hash, T: Clone + Eq + Hash> SubManager<S, T> {
 
 pub struct Broker {
     channel_subs: SubManager<Addr<Ws>, Uuid>,
-    db: PgPool,
 }
 
 impl Broker {
-    pub fn new(db: PgPool) -> Self {
-        let channel_subs = SubManager::new();
-        Broker { db, channel_subs }
+    pub fn new() -> Self {
+        Broker {
+            channel_subs: SubManager::new(),
+        }
     }
 }
 
@@ -119,12 +118,22 @@ impl Handler<Disconnect> for Broker {
     }
 }
 
-impl Handler<ChatMessage> for Broker {
+#[derive(Message)]
+#[rtype(result = "()")]
+pub enum Broadcast {
+    ChatMessage(ChatMessage),
+}
+
+impl Handler<Broadcast> for Broker {
     type Result = ();
 
-    fn handle(&mut self, msg: ChatMessage, _ctx: &mut Self::Context) {
-        for sub in self.channel_subs.get_subs(&msg.channelid) {
-            sub.do_send(msg.clone());
+    fn handle(&mut self, msg: Broadcast, _ctx: &mut Self::Context) {
+        match msg {
+            Broadcast::ChatMessage(x) => {
+                for sub in self.channel_subs.get_subs(&x.channelid) {
+                    sub.do_send(x.clone());
+                }
+            }
         }
     }
 }

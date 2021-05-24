@@ -77,6 +77,7 @@ impl Handler<ChatMessage> for Ws {
     type Result = ();
 
     fn handle(&mut self, msg: ChatMessage, ctx: &mut Self::Context) {
+        println!("connection handler");
         let res = AwspResponseMessage::Message(msg);
         ctx.text(serde_json::to_string(&res).expect("couldn't serialize AwspResponseMessage"));
     }

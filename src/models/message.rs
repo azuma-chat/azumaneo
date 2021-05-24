@@ -34,7 +34,7 @@ impl ChatMessage {
 
     pub async fn get_msgs(
         after: Option<&Uuid>,
-        mut limit: Option<i32>,
+        limit: Option<i32>,
         channelid: &Uuid,
         db: &PgPool,
     ) -> Result<Vec<ChatMessage>, AzumaError> {

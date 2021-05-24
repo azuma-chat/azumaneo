@@ -1,5 +1,6 @@
 use crate::models::session::Session;
 use crate::models::{error::AzumaError, message::ChatMessage};
+use crate::websocket::broker::Broadcast;
 use crate::AzumaState;
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
@@ -25,13 +26,13 @@ pub async fn send_msg(
     request: web::Json<SendMessageRequest>,
     session: Session,
 ) -> Result<HttpResponse, AzumaError> {
-    state.broker.do_send(ChatMessage {
+    state.broker.do_send(Broadcast::ChatMessage(ChatMessage {
         id: Uuid::new_v4(),
         authorid: session.subject,
         channelid: request.channel.clone(),
         content: request.content.clone(),
         created_at: Utc::now(),
-    });
+    }));
 
     Ok(HttpResponse::Ok().finish())
 }

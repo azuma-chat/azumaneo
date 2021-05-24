@@ -1,6 +1,8 @@
+use actix::Message;
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 pub enum OnlineStatus {
@@ -27,6 +29,16 @@ pub enum OnlineStatus {
     // Never let the `Undefined` state appear outside of the backend
     #[serde(skip)]
     Undefined,
+}
+
+#[derive(Message)]
+#[rtype(result = "()")]
+/// actix actor message sent to [`Ws`] actors when a users [`OnlineStatus`] is updated
+pub struct OnlineStatusUpdate {
+    /// ID of the user updating itself
+    pub subject: Uuid,
+    /// new and updated [`OnlineStatus`]
+    pub status: OnlineStatus,
 }
 
 impl Deref for OnlineStatus {

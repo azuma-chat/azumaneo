@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
 use actix::{
-    Actor, ActorContext, ActorFuture, Addr, AsyncContext, Context, ContextFutureSpawner, Handler,
-    Message, WrapFuture,
+    Actor, ActorFuture, AsyncContext, Context, ContextFutureSpawner, Handler, Message, WrapFuture,
 };
 use sqlx::PgPool;
 use uuid::Uuid;
