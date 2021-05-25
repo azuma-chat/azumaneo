@@ -23,8 +23,14 @@ mod websocket;
 
 /// This route just serves as a placeholder in case a specific path is reserved for future use, but the feature is not ready for production yet.
 pub fn placeholder_route(req: HttpRequest) -> HttpResponse {
-    let response = format!("Welcome to Azuma!\nUnfortunately the requested route '{path}' is not available yet. Please come back later.", path = req.path());
+    let response = format!("Welcome to Azuma!\n\nUnfortunately the requested route '{path}' is not available yet. Please come back later.", path = req.path());
     HttpResponse::NotImplemented().body(response)
+}
+
+/// 404 response route
+fn not_found(req: HttpRequest) -> HttpResponse {
+    let response = format!("Welcome to Azuma!\n\n\nUh ooh, we don't know what's supposed to be here... Please check if you misspelled something or used an old API documentation.\n\n{host}{path}", host = req.connection_info().host(), path = req.path());
+    HttpResponse::NotFound().body(response)
 }
 
 /// The AzumaConfig holds every value defined in the config.toml file for internal use in the server
@@ -89,6 +95,7 @@ async fn main() {
             .route("/message/send", web::post().to(send_msg))
             // other routes
             .route("/init_ws", web::get().to(init_ws))
+            .default_service(web::get().to(not_found))
     });
 
     println!("Starting azumaneo on {}", &config.host_uri);
@@ -100,5 +107,3 @@ async fn main() {
         .await
         .expect("couldn't run server");
 }
-
-//TODO: implement custom 404 response
