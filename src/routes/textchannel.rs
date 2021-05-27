@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::models::error::AzumaError;
+use crate::models::session::Session;
 use crate::models::textchannel::TextChannel;
 use crate::AzumaState;
 
@@ -22,6 +23,7 @@ pub struct TextchannelCreateResponse {
 pub async fn create_textchannel(
     mut req: TextchannelCreateRequest<'_>,
     state: web::Data<AzumaState>,
+    session: Session,
 ) -> Result<TextchannelCreateResponse, AzumaError> {
     // Clean up false input which screw up the database
     if let Some("") = req.description {
