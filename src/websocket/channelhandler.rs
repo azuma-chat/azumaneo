@@ -39,7 +39,7 @@ impl Actor for ChannelHandler {
     fn started(&mut self, ctx: &mut Self::Context) {
         let db = self.db.clone();
         async move {
-            let txchannels = match TextChannel::load_all(&db).await {
+            let txchannels = match TextChannel::get_all(&db).await {
                 Ok(channels) => channels,
                 Err(err) => panic!("An error occured while loading up textchannels: {}", err),
             };

@@ -1,3 +1,4 @@
+use crate::models::textchannel::TextChannel;
 use crate::{
     models::{
         awsp::wrapper::{AwspRequestMessage, AwspResponseMessage},
@@ -5,7 +6,7 @@ use crate::{
         message::ChatMessage,
         session::Session,
     },
-    websocket::broker::{Connect, Disconnect},
+    websocket::broker::{MassSubChannel, UnsubAll},
     AzumaState,
 };
 use actix::{
@@ -22,7 +23,7 @@ impl Actor for Ws {
     type Context = ws::WebsocketContext<Self>;
 
     fn stopped(&mut self, ctx: &mut Self::Context) {
-        self.data.broker.do_send(Disconnect {
+        self.data.broker.do_send(UnsubAll {
             addr: ctx.address(),
         });
     }
@@ -45,7 +46,21 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                                 Err(err) => return Err(err),
                             };
 
-                            data.broker.send(Connect { addr, session }).await?;
+                            let channels = match TextChannel::get_all(&data.db).await {
+                                Ok(vec) => vec,
+                                Err(err) => return Err(err),
+                            };
+                            let mut topics = Vec::new();
+                            for channel in channels {
+                                topics.push(channel.id)
+                            }
+                            data.broker
+                                .send(MassSubChannel {
+                                    addr,
+                                    session,
+                                    topics,
+                                })
+                                .await?;
                             let res = AwspResponseMessage::Welcome;
                             Ok(res)
                         }

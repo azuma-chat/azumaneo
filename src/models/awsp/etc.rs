@@ -4,6 +4,10 @@ use std::ops::Deref;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+// import is only needed for intra doc links
+#[allow(unused_imports)]
+use crate::websocket::connection::Ws;
+
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 pub enum OnlineStatus {
     /// This is set if a user establishes a connection and there is currently no other ws session connected which already set a onlinestatus used to represent the default state if a user is available

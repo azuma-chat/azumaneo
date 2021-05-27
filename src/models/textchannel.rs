@@ -41,7 +41,7 @@ impl TextChannel {
         )
     }
 
-    pub async fn load_all(db: &PgPool) -> Result<Vec<Self>, AzumaError> {
+    pub async fn get_all(db: &PgPool) -> Result<Vec<Self>, AzumaError> {
         Ok(query_as!(TextChannel, "SELECT * FROM textchannels")
             .fetch_all(db)
             .await?)

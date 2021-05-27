@@ -1,4 +1,6 @@
 use crate::models::error::AzumaError;
+use crate::models::textchannel::TextChannel;
+use crate::websocket::broker::Broadcast;
 use crate::AzumaState;
 use actix::prelude::*;
 use chrono::{DateTime, Utc};
@@ -21,6 +23,14 @@ impl ChatMessage {
     /// Send a new message into a textchannel
     pub async fn new(self, state: &AzumaState) -> Result<(), AzumaError> {
         query_as!(
+            TextChannel,
+            "SELECT * FROM textchannels WHERE id = $1",
+            self.channelid
+        )
+        .fetch_one(&state.db)
+        .await?;
+
+        query_as!(
             ChatMessage,
             "INSERT INTO messages (authorid, channelid, content) VALUES ($1, $2, $3)",
             self.authorid,
@@ -29,6 +39,8 @@ impl ChatMessage {
         )
         .execute(&state.db)
         .await?;
+
+        state.broker.do_send(Broadcast::ChatMessage(self));
         Ok(())
     }
 
