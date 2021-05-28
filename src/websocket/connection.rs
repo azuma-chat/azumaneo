@@ -14,6 +14,7 @@ use actix::{
 };
 use actix_web::web;
 use actix_web_actors::ws::{self, Message};
+use log::info;
 
 pub struct Ws {
     pub data: web::Data<AzumaState>,
@@ -54,6 +55,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                             for channel in channels {
                                 topics.push(channel.id)
                             }
+                            info!(target: "Websocket", "Authenticated websocket session of user '{}'", session.subject);
                             data.broker
                                 .send(MassSubChannel {
                                     addr,
@@ -92,7 +94,6 @@ impl Handler<ChatMessage> for Ws {
     type Result = ();
 
     fn handle(&mut self, msg: ChatMessage, ctx: &mut Self::Context) {
-        println!("connection handler");
         let res = AwspResponseMessage::Message(msg);
         ctx.text(serde_json::to_string(&res).expect("couldn't serialize AwspResponseMessage"));
     }

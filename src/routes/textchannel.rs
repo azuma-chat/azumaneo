@@ -1,4 +1,5 @@
 use actix_web::{web, HttpResponse};
+use log::info;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -35,11 +36,12 @@ pub async fn create_textchannel(
         None => None,
         Some(str) => Some(str.to_string()),
     };
-    let txchannel = TextChannel::new(&state.db, req.name.clone(), description).await?;
+    let textchannel = TextChannel::new(&state.db, req.name.clone(), description).await?;
+    info!(target: "REST API", "User '{user}' created TextChannel with name '{name}'", user = session.subject, name = req.name);
     let response = TextchannelCreateResponse {
-        id: txchannel.id,
-        name: txchannel.name,
-        description: txchannel.description,
+        id: textchannel.id,
+        name: textchannel.name,
+        description: textchannel.description,
     };
     Ok(HttpResponse::Ok().json(response))
 }

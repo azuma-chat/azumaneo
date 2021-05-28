@@ -6,8 +6,9 @@ use crate::{
     },
     AzumaState,
 };
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
+use log::info;
 use serde::{Deserialize, Serialize};
 use sodiumoxide::crypto::pwhash::argon2id13::{self, HashedPassword};
 use uuid::Uuid;
@@ -55,13 +56,14 @@ pub struct LoginUserResponse {
 pub async fn login_user(
     data: web::Data<AzumaState>,
     request: web::Json<LoginUserRequest>,
+    req: HttpRequest,
 ) -> Result<HttpResponse, AzumaError> {
     let user = User::get_by_name(&request.name, &data.db).await?;
     let hashed_password = HashedPassword::from_slice(&user.password).ok_or(Argon2idError)?;
 
     if argon2id13::pwhash_verify(&hashed_password, request.password.as_bytes()) {
         let session = Session::new(&user, &data.db).await?;
-
+        info!(target: "Access Control", "User '{}' logged in from '{}'", session.subject, req.connection_info().realip_remote_addr().unwrap_or("None"));
         let response_body = LoginUserResponse {
             token: session.token,
         };
@@ -99,7 +101,7 @@ pub async fn update_user(
         &data.db,
     )
     .await?;
-
+    info!(target: "Access Control", "User '{}' was updated", user.id);
     let response_body = UpdateUserResponse {
         id: user.id,
         name: user.name,

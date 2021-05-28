@@ -3,9 +3,10 @@
 use std::fs::read_to_string;
 
 use actix::{Actor, Addr};
-use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
+use log::{trace, info};
 use serde::Deserialize;
-use sqlx::{migrate, PgPool};
+use sqlx::{migrate, ConnectOptions, PgPool};
 
 use routes::{
     api::api_info,
@@ -15,7 +16,10 @@ use routes::{
 };
 use websocket::broker::Broker;
 
-use crate::{routes::textchannel::create_textchannel, websocket::channelhandler::ChannelHandler};
+use crate::routes::textchannel::create_textchannel;
+use crate::websocket::channelhandler::ChannelHandler;
+use sqlx::postgres::PgConnectOptions;
+use std::str::FromStr;
 
 mod models;
 mod routes;
@@ -59,10 +63,15 @@ pub struct AzumaState {
 
 #[actix_web::main]
 async fn main() {
-    pretty_env_logger::init();
+    pretty_env_logger::init_custom_env("AZUMA_LOGLEVEL");
     let config = AzumaConfig::load("config.toml");
     // Fix for "mismatched types" error in query_as! macro: https://docs.rs/sqlx/0.4.0-beta.1/sqlx/macro.query_as.html#troubleshooting-error-mismatched-types
-    let db = PgPool::connect(&config.db_uri).await.unwrap();
+    let mut connection_options = PgConnectOptions::from_str(&config.db_uri)
+        .expect("An error occurred while setting up the database connection")
+        .application_name("azumaneo");
+    connection_options.log_statements(log::LevelFilter::Off);
+    let db = PgPool::connect_with(connection_options).await.unwrap();
+    trace!(target: "STARTUP", "Running Migrations");
     migrate!("./migrations/")
         .run(&db)
         .await
@@ -80,7 +89,6 @@ async fn main() {
     let server = HttpServer::new(move || {
         App::new()
             .data(state.clone())
-            .wrap(middleware::Logger::default())
             // general API routes
             .route("/", web::get().to(api_info))
             // user routes
@@ -100,7 +108,7 @@ async fn main() {
             .default_service(web::get().to(not_found))
     });
 
-    println!("Starting azumaneo on {}", &config.host_uri);
+    info!(target: "STARTUP", "Starting azumaneo on {}", &config.host_uri);
     // start the actual http server
     server
         .bind(&config.host_uri)

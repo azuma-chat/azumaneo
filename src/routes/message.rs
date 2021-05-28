@@ -3,6 +3,7 @@ use crate::models::{error::AzumaError, message::ChatMessage};
 use crate::AzumaState;
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
+use log::info;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -25,6 +26,7 @@ pub async fn send_msg(
     request: web::Json<SendMessageRequest>,
     session: Session,
 ) -> Result<HttpResponse, AzumaError> {
+    info!(target: "REST API", "ChatMessage sent in '{channel}' by '{user}'", channel = request.channel, user = session.subject);
     ChatMessage::new(
         ChatMessage {
             id: Uuid::new_v4(),

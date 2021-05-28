@@ -1,5 +1,6 @@
 use crate::models::error::{Argon2idError, AzumaError};
 use chrono::{DateTime, Utc};
+use log::info;
 use sodiumoxide::crypto::pwhash::argon2id13;
 use sqlx::{query_as, types::Uuid, FromRow, PgPool};
 
@@ -31,6 +32,7 @@ impl User {
         )
         .fetch_one(db)
         .await?;
+        info!(target: "Access Control", "Created user with name '{}' and id {}", name, user.id);
 
         Ok(user)
     }
@@ -82,6 +84,7 @@ impl User {
         )
             .fetch_one(db)
             .await?;
+        info!(target: "Access Control", "Updated user '{}'", user.id);
         *self = user;
         Ok(())
     }

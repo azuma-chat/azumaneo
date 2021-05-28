@@ -29,7 +29,6 @@ impl<S: Clone + Eq + Hash, T: Clone + Eq + Hash> SubManager<S, T> {
             let mut t = HashSet::new();
             t.insert(topic.clone());
             self.subscribers.insert(subscriber.clone(), t);
-            println!("insert stuff");
         }
 
         if let Some(s) = self.topics.get_mut(&topic) {
