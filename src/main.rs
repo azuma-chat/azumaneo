@@ -15,7 +15,7 @@ use routes::{
 };
 use websocket::broker::Broker;
 
-use crate::websocket::channelhandler::ChannelHandler;
+use crate::{routes::textchannel::create_textchannel, websocket::channelhandler::ChannelHandler};
 
 mod models;
 mod routes;
@@ -93,6 +93,8 @@ async fn main() {
             )
             // message related routes
             .route("/message/send", web::post().to(send_msg))
+            // textchannel stuff
+            .route("/textchannel/create", web::post().to(create_textchannel))
             // other routes
             .route("/init_ws", web::get().to(init_ws))
             .default_service(web::get().to(not_found))
