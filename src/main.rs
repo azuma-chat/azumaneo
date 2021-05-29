@@ -5,7 +5,7 @@
 use std::fs::read_to_string;
 
 use actix::{Actor, Addr};
-use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{middleware::Logger, web, App, HttpRequest, HttpResponse, HttpServer};
 use log::info;
 use serde::Deserialize;
 use sqlx::{migrate, PgPool};
@@ -54,7 +54,7 @@ pub struct AzumaState {
 
 #[actix_web::main]
 async fn main() {
-    pretty_env_logger::init();
+    pretty_env_logger::init_timed();
     let config = AzumaConfig::load("config.toml");
 
     let db = PgPool::connect(&config.db_uri).await.unwrap();
@@ -73,6 +73,7 @@ async fn main() {
     let server = HttpServer::new(move || {
         App::new()
             .data(state.clone())
+            .wrap(Logger::default())
             // general API routes
             .route("/", web::get().to(api_info))
             .route("/init_ws", web::get().to(init_ws))
