@@ -78,44 +78,6 @@
       ]
     }
   },
-  "1bec99c6f814146985fc18f70a36158f49296dea059b872ddb46b6a760cc0774": {
-    "query": "INSERT INTO textchannels (name) VALUES ($1) RETURNING *",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "name",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 2,
-          "name": "description",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 3,
-          "name": "created_at",
-          "type_info": "Timestamptz"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        true,
-        false
-      ]
-    }
-  },
   "3a64dde57749268bd35318f5ddf506f00797d4de07fc11711c721eab16723bcd": {
     "query": "INSERT INTO users (name, password) values ($1, $2) RETURNING *",
     "describe": {
@@ -148,6 +110,52 @@
         ]
       },
       "nullable": [
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "475cb9f1d398c23bf6cb932338299c119a173ecb2451852647f3805cd018a42a": {
+    "query": "SELECT * FROM messages WHERE created_at < COALESCE((SELECT created_at from messages WHERE id = $1), current_timestamp) AND channel = $2 ORDER BY created_at ASC LIMIT LEAST(100, COALESCE($3, 50))",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "author",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 2,
+          "name": "channel",
+          "type_info": "Uuid"
+        },
+        {
+          "ordinal": 3,
+          "name": "content",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 4,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Int4"
+        ]
+      },
+      "nullable": [
+        false,
         false,
         false,
         false,
@@ -232,52 +240,6 @@
       ]
     }
   },
-  "87d09ef498d9df51e5f7eff9fb998a977d870bc350b5c7849275989282efd24c": {
-    "query": "SELECT * FROM messages WHERE created_at < (SELECT created_at from messages WHERE id = $1) AND channelid = $2  ORDER BY created_at ASC LIMIT LEAST(100, COALESCE($3, 50))",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "id",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 1,
-          "name": "authorid",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 2,
-          "name": "channelid",
-          "type_info": "Uuid"
-        },
-        {
-          "ordinal": 3,
-          "name": "content",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 4,
-          "name": "created_at",
-          "type_info": "Timestamptz"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Int4"
-        ]
-      },
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
-    }
-  },
   "89fcef38a7d897fe89f0088c061c5a0551c346e5102843ce38c9c5a3b05b7ccc": {
     "query": "SELECT * FROM textchannels",
     "describe": {
@@ -352,8 +314,8 @@
       ]
     }
   },
-  "a032400c5f6409b880758605eec2190457c63cd85ccd8e235c17c374dc6b8a15": {
-    "query": "SELECT * FROM messages WHERE channelid = $1 ORDER BY created_at ASC LIMIT LEAST(100, COALESCE($2, 50))",
+  "a258c205425024ecb4c70bd857fc9750f1d9d833a43d6601f7a8b7f3f7c0ada0": {
+    "query": "INSERT INTO messages (author, channel, content) VALUES ($1, $2, $3) RETURNING *",
     "describe": {
       "columns": [
         {
@@ -363,12 +325,12 @@
         },
         {
           "ordinal": 1,
-          "name": "authorid",
+          "name": "author",
           "type_info": "Uuid"
         },
         {
           "ordinal": 2,
-          "name": "channelid",
+          "name": "channel",
           "type_info": "Uuid"
         },
         {
@@ -385,7 +347,8 @@
       "parameters": {
         "Left": [
           "Uuid",
-          "Int4"
+          "Uuid",
+          "Text"
         ]
       },
       "nullable": [
@@ -471,20 +434,6 @@
         false,
         false
       ]
-    }
-  },
-  "e2ec7f7f9e76495469037c8ac3670049c3c49da5caea1f51a4a85a483eb6f74b": {
-    "query": "INSERT INTO messages (authorid, channelid, content) VALUES ($1, $2, $3)",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Text"
-        ]
-      },
-      "nullable": []
     }
   }
 }
