@@ -1,11 +1,12 @@
 use chrono::{DateTime, Utc};
+use serde::Serialize;
 use sqlx::{query_as, PgPool};
 use uuid::Uuid;
 
 use crate::models::error::AzumaError;
 
 // TODO: permission int is still missing
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Serialize)]
 pub struct TextChannel {
     pub id: Uuid,
     pub name: String,
@@ -16,8 +17,8 @@ pub struct TextChannel {
 impl TextChannel {
     pub async fn new(
         db: &PgPool,
-        name: String,
-        description: Option<String>,
+        name: &str,
+        description: Option<&str>,
     ) -> Result<Self, AzumaError> {
         let text_channel = query_as!(
             TextChannel,

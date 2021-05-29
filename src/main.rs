@@ -20,7 +20,6 @@ use websocket::broker::Broker;
 
 use crate::models::error::AzumaError;
 use crate::routes::textchannel::create_textchannel;
-use crate::websocket::channelhandler::ChannelHandler;
 
 mod models;
 mod routes;
@@ -51,7 +50,6 @@ impl AzumaConfig {
 pub struct AzumaState {
     pub db: PgPool,
     pub broker: Addr<Broker>,
-    pub channelhandler: Addr<ChannelHandler>,
 }
 
 #[actix_web::main]
@@ -66,12 +64,10 @@ async fn main() {
         .expect("couldn't run database migrations");
 
     let broker = Broker::new().start();
-    let channelhandler = ChannelHandler::new(db.clone()).start();
 
     let state = AzumaState {
         db: db.clone(),
         broker: broker.clone(),
-        channelhandler: channelhandler.clone(),
     };
 
     let server = HttpServer::new(move || {
