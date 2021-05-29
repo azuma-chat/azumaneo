@@ -58,6 +58,11 @@
           "ordinal": 2,
           "name": "description",
           "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -68,7 +73,8 @@
       "nullable": [
         false,
         false,
-        true
+        true,
+        false
       ]
     }
   },
@@ -90,6 +96,11 @@
           "ordinal": 2,
           "name": "description",
           "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -100,7 +111,8 @@
       "nullable": [
         false,
         false,
-        true
+        true,
+        false
       ]
     }
   },
@@ -161,6 +173,11 @@
           "ordinal": 2,
           "name": "description",
           "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -172,7 +189,8 @@
       "nullable": [
         false,
         false,
-        true
+        true,
+        false
       ]
     }
   },
@@ -278,6 +296,11 @@
           "ordinal": 2,
           "name": "description",
           "type_info": "Text"
+        },
+        {
+          "ordinal": 3,
+          "name": "created_at",
+          "type_info": "Timestamptz"
         }
       ],
       "parameters": {
@@ -286,7 +309,8 @@
       "nullable": [
         false,
         false,
-        true
+        true,
+        false
       ]
     }
   },

@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use sqlx::{query_as, PgPool};
 use uuid::Uuid;
 
@@ -9,6 +10,7 @@ pub struct TextChannel {
     pub id: Uuid,
     pub name: String,
     pub description: Option<String>,
+    pub created_at: DateTime<Utc>,
 }
 
 impl TextChannel {
