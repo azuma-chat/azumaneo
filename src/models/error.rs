@@ -80,9 +80,6 @@ impl From<SqlxError> for AzumaError {
                 return AzumaError::AlreadyExists;
             }
         }
-        if let SqlxError::RowNotFound = &err {
-            return AzumaError::NotFound;
-        }
 
         AzumaError::InternalServerError {
             source: Box::new(err),

@@ -1,7 +1,6 @@
 use crate::models::error::AzumaError;
-use crate::models::textchannel::TextChannel;
 use crate::websocket::broker::Broadcast;
-use crate::AzumaState;
+use crate::websocket::broker::Broker;
 use actix::prelude::*;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
@@ -13,64 +12,44 @@ use uuid::Uuid;
 #[rtype(response = "()")]
 pub struct ChatMessage {
     pub id: Uuid,
-    pub authorid: Uuid,
-    pub channelid: Uuid,
+    pub author: Uuid,
+    pub channel: Uuid,
     pub content: String,
     pub created_at: DateTime<Utc>,
 }
 
 impl ChatMessage {
-    /// Send a new message into a textchannel
-    pub async fn new(self, state: &AzumaState) -> Result<(), AzumaError> {
-        query_as!(
-            TextChannel,
-            "SELECT * FROM textchannels WHERE id = $1",
-            self.channelid
-        )
-        .fetch_one(&state.db)
-        .await?;
-
-        query_as!(
+    pub async fn new(
+        author: &Uuid,
+        channel: &Uuid,
+        content: &str,
+        broker: &Addr<Broker>,
+        db: &PgPool,
+    ) -> Result<Self, AzumaError> {
+        let chat_message = query_as!(
             ChatMessage,
-            "INSERT INTO messages (authorid, channelid, content) VALUES ($1, $2, $3)",
-            self.authorid,
-            self.channelid,
-            self.content
+            "INSERT INTO messages (author, channel, content) VALUES ($1, $2, $3) RETURNING *",
+            author,
+            channel,
+            content
         )
-        .execute(&state.db)
+        .fetch_one(db)
         .await?;
 
-        state.broker.do_send(Broadcast::ChatMessage(self));
-        Ok(())
+        broker.do_send(Broadcast::ChatMessage(chat_message.clone()));
+        Ok(chat_message)
     }
 
-    pub async fn get_msgs(
-        after: Option<&Uuid>,
+    pub async fn get_messages(
+        before: Option<&Uuid>,
         limit: Option<i32>,
-        channelid: &Uuid,
+        channel: &Uuid,
         db: &PgPool,
     ) -> Result<Vec<ChatMessage>, AzumaError> {
-        match after {
-            Some(after) => {
-                let messages: Vec<ChatMessage> = query_as!(ChatMessage, "SELECT * FROM messages WHERE created_at < (SELECT created_at from messages WHERE id = $1) AND channelid = $2  ORDER BY created_at ASC LIMIT LEAST(100, COALESCE($3, 50))",
-                after,
-                channelid,
-                limit)
-                    .fetch_all(db)
-                    .await?;
-                Ok(messages)
-            }
-            None => {
-                let messages: Vec<ChatMessage> = query_as!(
-                    ChatMessage,
-                    "SELECT * FROM messages WHERE channelid = $1 ORDER BY created_at ASC LIMIT LEAST(100, COALESCE($2, 50))",
-                    channelid,
-                    limit
-                )
-                .fetch_all(db)
-                .await?;
-                Ok(messages)
-            }
-        }
+        let chat_messages: Vec<ChatMessage> = query_as!(ChatMessage, "SELECT * FROM messages WHERE created_at < COALESCE((SELECT created_at from messages WHERE id = $1), current_timestamp) AND channel = $2 ORDER BY created_at ASC LIMIT LEAST(100, COALESCE($3, 50))", before, channel, limit)
+            .fetch_all(db)
+            .await?;
+
+        Ok(chat_messages)
     }
 }

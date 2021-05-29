@@ -1,10 +1,10 @@
 use crate::models::textchannel::TextChannel;
 use crate::{
     models::{
-        awsp::wrapper::{AwspRequestMessage, AwspResponseMessage},
         error::AzumaError,
         message::ChatMessage,
         session::Session,
+        ws::{AwspRequestMessage, AwspResponseMessage},
     },
     websocket::broker::{MassSubChannel, UnsubAll},
     AzumaState,

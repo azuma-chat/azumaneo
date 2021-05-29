@@ -134,7 +134,7 @@ impl Handler<Broadcast> for Broker {
     fn handle(&mut self, msg: Broadcast, _ctx: &mut Self::Context) {
         match msg {
             Broadcast::ChatMessage(x) => {
-                for sub in self.channel_subs.get_subs(&x.channelid) {
+                for sub in self.channel_subs.get_subs(&x.channel) {
                     sub.do_send(x.clone());
                 }
             }

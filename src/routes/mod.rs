@@ -12,8 +12,6 @@ pub mod api;
 pub mod init_ws;
 /// Everything related to messages
 pub mod message;
-/// Every route related to a users onlinestatus
-pub mod onlinestatus;
 /// Textchannel stuff is stored here
 pub mod textchannel;
 /// Bindings to the internal [`User`] model
