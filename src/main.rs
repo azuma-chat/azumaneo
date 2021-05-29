@@ -19,7 +19,10 @@ use routes::{
 use websocket::broker::Broker;
 
 use crate::models::error::AzumaError;
+use crate::models::session::Session;
+use crate::models::stateactor::{GetOnlineStatus, StateActor};
 use crate::routes::textchannel::create_textchannel;
+use crate::routes::userstatus::set_onlinestatus;
 
 mod models;
 mod routes;
@@ -50,6 +53,7 @@ impl AzumaConfig {
 pub struct AzumaState {
     pub db: PgPool,
     pub broker: Addr<Broker>,
+    pub state: Addr<StateActor>,
 }
 
 #[actix_web::main]
@@ -64,10 +68,12 @@ async fn main() {
         .expect("couldn't run database migrations");
 
     let broker = Broker::new().start();
+    let state = StateActor::new().start();
 
     let state = AzumaState {
         db: db.clone(),
         broker: broker.clone(),
+        state: state.clone(),
     };
 
     let server = HttpServer::new(move || {
@@ -81,6 +87,7 @@ async fn main() {
             .route("/user/register", web::post().to(register_user))
             .route("/user/login", web::post().to(login_user))
             .route("/user/update", web::patch().to(update_user))
+            .route("/user/status/set", web::post().to(set_onlinestatus))
             // message routes
             .route("/message/send", web::post().to(send_msg))
             // textchannel stuff

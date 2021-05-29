@@ -8,6 +8,7 @@ pub mod error;
 pub mod message;
 /// Session related stuff
 pub mod session;
+pub mod stateactor;
 /// The textchannel struct representation and all its trait implementations
 pub mod textchannel;
 /// Database and internal representations of a user

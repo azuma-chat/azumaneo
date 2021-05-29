@@ -16,3 +16,5 @@ pub mod message;
 pub mod textchannel;
 /// Bindings to the internal [`User`] model
 pub mod user;
+///
+pub mod userstatus;
