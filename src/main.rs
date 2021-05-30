@@ -18,9 +18,8 @@ use routes::{
 };
 use websocket::broker::Broker;
 
-use crate::models::error::AzumaError;
-use crate::models::session::Session;
-use crate::models::stateactor::{GetOnlineStatus, StateActor};
+use crate::{models::error::AzumaError, routes::user::fetch_user};
+use crate::models::stateactor::{StateActor};
 use crate::routes::textchannel::create_textchannel;
 use crate::routes::userstatus::set_onlinestatus;
 
@@ -87,6 +86,7 @@ async fn main() {
             .route("/user/register", web::post().to(register_user))
             .route("/user/login", web::post().to(login_user))
             .route("/user/update", web::patch().to(update_user))
+            .route("/user/info", web::get().to(fetch_user))
             .route("/user/status/set", web::post().to(set_onlinestatus))
             // message routes
             .route("/message/send", web::post().to(send_msg))

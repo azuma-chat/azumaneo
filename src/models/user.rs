@@ -3,12 +3,14 @@ use chrono::{DateTime, Utc};
 use log::info;
 use sodiumoxide::crypto::pwhash::argon2id13;
 use sqlx::{query_as, types::Uuid, FromRow, PgPool};
+use serde::Serialize;
 
 /// The representation of a user account
-#[derive(Debug, FromRow)]
+#[derive(Debug, FromRow, Serialize)]
 pub struct User {
     pub id: Uuid,
     pub name: String,
+    #[serde(skip)]
     pub password: Vec<u8>,
     pub created_at: DateTime<Utc>,
     // TODO: add icon and status properties

@@ -1,12 +1,5 @@
-use crate::{
-    models::{
-        error::{Argon2idError, AzumaError},
-        session::Session,
-        user::User,
-    },
-    AzumaState,
-};
-use actix_web::{web, HttpRequest, HttpResponse};
+use crate::{AzumaState, models::{error::{Argon2idError, AzumaError}, session::Session, stateactor::{GetOnlineStatus, OnlineStatus}, user::User}};
+use actix_web::{HttpRequest, HttpResponse, web::{self, Json}};
 use chrono::{DateTime, Utc};
 use log::info;
 use serde::{Deserialize, Serialize};
@@ -108,4 +101,28 @@ pub async fn update_user(
         created_at: user.created_at,
     };
     Ok(HttpResponse::Ok().json(response_body))
+}
+
+#[derive(Deserialize)]
+pub struct FetchUserRequest {
+    pub user: Uuid,
+}
+
+#[derive(Serialize)]
+pub struct FetchUserResponse {
+    pub onlinestatus: OnlineStatus,
+    // apply flatten in order to pull the fields out of the user struct
+    #[serde(flatten)]
+    pub user: User
+}
+
+/// Fetch information about a user
+pub async fn fetch_user(request: Json<FetchUserRequest>, state: web::Data<AzumaState>) -> Result<HttpResponse, AzumaError> {
+    let user = User::get_by_id(&request.user, &state.db).await?;
+    let onlinestatus = state.state.send(GetOnlineStatus {
+        user: request.user,
+    }).await?;
+    let response = FetchUserResponse { onlinestatus: onlinestatus, user: user };
+    dbg!(&onlinestatus);
+    Ok(HttpResponse::Ok().json(response))
 }

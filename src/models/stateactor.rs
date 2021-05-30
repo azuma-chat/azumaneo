@@ -1,5 +1,4 @@
-use crate::models::error::AzumaError;
-use actix::{Actor, Context, Handler, Message};
+use actix::{Actor, Context, Handler, Message, dev::{MessageResponse, ResponseChannel}};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -23,7 +22,7 @@ impl StateActor {
 
 // Messages
 #[derive(Message)]
-#[rtype(result = "Option<OnlineStatus>")]
+#[rtype(result = "OnlineStatus")]
 /// `GetOnlineStatus` returns the onlinestatus of a user
 pub struct GetOnlineStatus {
     /// Subject
@@ -49,12 +48,12 @@ pub struct RemoveOnlineStatus {
 }
 
 impl Handler<GetOnlineStatus> for StateActor {
-    type Result = Option<OnlineStatus>;
+    type Result = OnlineStatus;
 
     fn handle(&mut self, msg: GetOnlineStatus, _ctx: &mut Self::Context) -> Self::Result {
         match self.onlinestatus.get(&msg.user) {
-            None => None,
-            Some(status) => Some(*status),
+            None => OnlineStatus::Offline,
+            Some(status) => *status,
         }
     }
 }
@@ -74,6 +73,18 @@ impl Handler<RemoveOnlineStatus> for StateActor {
         self.onlinestatus.remove(&msg.user);
     }
 }
+
+impl<A, M> MessageResponse<A, M> for OnlineStatus
+        where
+            A: Actor,
+            M: Message<Result = Self>,
+        {
+            fn handle<R: ResponseChannel<M>>(self, _: &mut A::Context, tx: Option<R>) {
+                if let Some(tx) = tx {
+                    tx.send(self);
+                }
+            }
+        }
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 pub enum OnlineStatus {
