@@ -18,10 +18,10 @@ use routes::{
 };
 use websocket::broker::Broker;
 
-use crate::{models::error::AzumaError, routes::user::fetch_user};
-use crate::models::stateactor::{StateActor};
+use crate::models::stateactor::StateActor;
 use crate::routes::textchannel::create_textchannel;
 use crate::routes::userstatus::set_onlinestatus;
+use crate::{models::error::AzumaError, routes::user::fetch_user};
 
 mod models;
 mod routes;

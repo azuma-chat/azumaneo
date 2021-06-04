@@ -16,9 +16,15 @@ pub async fn set_onlinestatus(
     state: Data<AzumaState>,
     session: Session,
 ) -> Result<HttpResponse, AzumaError> {
-    state.state.do_send(SetOnlineStatus {
-        user: session.subject,
-        status: request.status,
-    });
-    Ok(HttpResponse::Ok().finish())
+    match state
+        .state
+        .send(SetOnlineStatus {
+            user: session.subject,
+            status: request.status,
+        })
+        .await?
+    {
+        Ok(_) => Ok(HttpResponse::Ok().finish()),
+        Err(err) => Err(err),
+    }
 }

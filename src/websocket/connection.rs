@@ -1,3 +1,5 @@
+use crate::models::stateactor::AddUserSession;
+use crate::models::stateactor::RemoveUserSession;
 use crate::models::textchannel::TextChannel;
 use crate::{
     models::{
@@ -9,16 +11,27 @@ use crate::{
     websocket::broker::{MassSubChannel, UnsubAll},
     AzumaState,
 };
+use actix::ActorContext;
 use actix::{
-    Actor, ActorFuture, AsyncContext, ContextFutureSpawner, Handler, StreamHandler, WrapFuture,
+    Actor, ActorFuture, AsyncContext, ContextFutureSpawner, Handler, Message as MessageMacro,
+    StreamHandler, WrapFuture,
 };
 use actix_web::web;
 use actix_web_actors::ws::{self, Message};
 use log::info;
+use uuid::Uuid;
 
 pub struct Ws {
     pub data: web::Data<AzumaState>,
+    pub subject: Option<Uuid>,
+    /// Each connection has its own id to seperate it from the other sessions a user could have
+    pub connection_id: Uuid,
 }
+
+#[derive(MessageMacro)]
+#[rtype(result = "()")]
+
+struct SetSubject(Option<Uuid>);
 
 impl Actor for Ws {
     type Context = ws::WebsocketContext<Self>;
@@ -27,6 +40,15 @@ impl Actor for Ws {
         self.data.broker.do_send(UnsubAll {
             addr: ctx.address(),
         });
+        match self.subject {
+            Some(uuid) => {
+                self.data.state.do_send(RemoveUserSession {
+                    subject: uuid,
+                    connection_id: self.connection_id,
+                });
+            }
+            None => (),
+        };
     }
 }
 
@@ -34,10 +56,14 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
             Ok(Message::Ping(msg)) => ctx.pong(&msg),
-            Ok(Message::Close(_)) => ctx.close(None),
+            Ok(Message::Close(_)) => {
+                ctx.close(None);
+                ctx.stop();
+            }
             Ok(Message::Text(text)) => {
                 let data = self.data.clone();
                 let addr = ctx.address();
+                let connection_id = self.connection_id;
                 async move {
                     match serde_json::from_str::<AwspRequestMessage>(&text) {
                         Ok(AwspRequestMessage::Authenticate { token }) => {
@@ -58,11 +84,14 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Ws {
                             info!(target: "Websocket", "Authenticated websocket session of user '{}'", session.subject);
                             data.broker
                                 .send(MassSubChannel {
-                                    addr,
-                                    session,
+                                    addr: addr.clone(),
+                                    session: session.clone(),
                                     topics,
                                 })
                                 .await?;
+                            data.state.do_send(AddUserSession { subject: session.subject, addr: addr.clone(), connection_id });
+                            addr.do_send(SetSubject(Some(session.subject)));
+
                             let res = AwspResponseMessage::Welcome;
                             Ok(res)
                         }
@@ -96,5 +125,12 @@ impl Handler<ChatMessage> for Ws {
     fn handle(&mut self, msg: ChatMessage, ctx: &mut Self::Context) {
         let res = AwspResponseMessage::Message(msg);
         ctx.text(serde_json::to_string(&res).expect("couldn't serialize AwspResponseMessage"));
+    }
+}
+
+impl Handler<SetSubject> for Ws {
+    type Result = ();
+    fn handle(&mut self, msg: SetSubject, _ctx: &mut Self::Context) {
+        self.subject = msg.0;
     }
 }

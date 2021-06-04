@@ -8,7 +8,7 @@ use sqlx::{query_as, FromRow, PgPool};
 use std::{future::Future, pin::Pin};
 use uuid::Uuid;
 
-#[derive(FromRow)]
+#[derive(FromRow, Clone)]
 pub struct Session {
     pub token: Uuid,
     pub subject: Uuid,

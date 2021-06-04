@@ -20,7 +20,7 @@ pub enum AzumaError {
     #[error("FORBIDDEN")]
     Forbidden,
     #[error("INTERNAL_SERVER_ERROR")]
-    InternalServerError { source: Box<dyn ErrorTrait> },
+    InternalServerError { source: Box<dyn ErrorTrait + Send> },
     #[error("NOT_FOUND")]
     NotFound,
     #[error("UNAUTHORIZED")]
