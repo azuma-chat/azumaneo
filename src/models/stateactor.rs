@@ -1,6 +1,6 @@
 use crate::websocket::connection::Ws;
 use actix::{
-    dev::{MessageResponse, ResponseChannel},
+    dev::{MessageResponse, OneshotSender},
     Actor, Addr, Context, Handler, Message,
 };
 use log::debug;
@@ -97,7 +97,7 @@ where
     A: Actor,
     M: Message<Result = Self>,
 {
-    fn handle<R: ResponseChannel<M>>(self, _: &mut A::Context, tx: Option<R>) {
+    fn handle(self, _: &mut A::Context, tx: Option<OneshotSender<M::Result>>) {
         if let Some(tx) = tx {
             tx.send(self);
         }

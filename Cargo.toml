@@ -1,19 +1,16 @@
 [package]
 name = "azumaneo"
 version = "0.1.0"
-authors = [
-    "cloudybyte <hi@cloudybyte.net>",
-    "okrplay <32576280+okrplay@users.noreply.github.com>"
-]
+authors = ["cloudybyte <hi@cloudybyte.net>", "okrplay <32576280+okrplay@users.noreply.github.com>"]
 edition = "2018"
 license = "AGPL-3.0-or-later"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix = "0.10"
-actix-web = "3"
-actix-web-actors = "3"
+actix = "0.12"
+actix-web = "4.0.0-beta.9"
+actix-web-actors = "4.0.0-beta.7"
 chrono = { version = "0.4", features = ["serde"] }
 log = "0.4"
 pretty_env_logger = "0.4"
@@ -21,7 +18,7 @@ rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sodiumoxide = "0.2"
-sqlx = { version = "0.4", features = ["chrono", "macros", "migrate", "offline", "postgres", "runtime-actix-rustls", "uuid"] }
+sqlx = { version = "0.5", features = ["chrono", "macros", "migrate", "offline", "postgres", "runtime-actix-rustls", "uuid"] }
 thiserror = "1"
 toml = "0.5"
 uuid = { version = "0.8", features = ["serde", "v4"] }

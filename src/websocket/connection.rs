@@ -13,7 +13,7 @@ use crate::{
 };
 use actix::ActorContext;
 use actix::{
-    Actor, ActorFuture, AsyncContext, ContextFutureSpawner, Handler, Message as MessageMacro,
+    Actor, ActorFutureExt, AsyncContext, ContextFutureSpawner, Handler, Message as MessageMacro,
     StreamHandler, WrapFuture,
 };
 use actix_web::web;
