@@ -10,18 +10,18 @@ use log::info;
 use serde::Deserialize;
 use sqlx::{migrate, PgPool};
 
-use routes::{
-    api::api_info,
-    init_ws::init_ws,
-    message::send_msg,
-    user::{login_user, register_user, update_user},
+use crate::{
+    models::{error::AzumaError, stateactor::StateActor},
+    routes::{
+        api::api_info,
+        init_ws::init_ws,
+        message::send_msg,
+        textchannel::create_textchannel,
+        user::{fetch_user, login_user, register_user, update_user},
+        userstatus::set_onlinestatus,
+    },
+    websocket::broker::Broker,
 };
-use websocket::broker::Broker;
-
-use crate::models::stateactor::StateActor;
-use crate::routes::textchannel::create_textchannel;
-use crate::routes::userstatus::set_onlinestatus;
-use crate::{models::error::AzumaError, routes::user::fetch_user};
 
 mod models;
 mod routes;

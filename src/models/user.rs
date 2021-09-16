@@ -1,9 +1,10 @@
-use crate::models::error::{Argon2idError, AzumaError};
 use chrono::{DateTime, Utc};
 use log::info;
 use serde::Serialize;
 use sodiumoxide::crypto::pwhash::argon2id13;
 use sqlx::{query_as, types::Uuid, FromRow, PgPool};
+
+use crate::models::error::{Argon2idError, AzumaError};
 
 /// The representation of a user account
 #[derive(Debug, FromRow, Serialize)]

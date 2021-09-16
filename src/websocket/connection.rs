@@ -1,25 +1,24 @@
-use crate::models::stateactor::AddUserSession;
-use crate::models::stateactor::RemoveUserSession;
-use crate::models::textchannel::TextChannel;
-use crate::{
-    models::{
-        error::AzumaError,
-        message::ChatMessage,
-        session::Session,
-        ws::{AwspRequestMessage, AwspResponseMessage},
-    },
-    websocket::broker::{MassSubChannel, UnsubAll},
-    AzumaState,
-};
-use actix::ActorContext;
 use actix::{
-    Actor, ActorFutureExt, AsyncContext, ContextFutureSpawner, Handler, Message as MessageMacro,
-    StreamHandler, WrapFuture,
+    Actor, ActorContext, ActorFutureExt, AsyncContext, ContextFutureSpawner, Handler,
+    Message as MessageMacro, StreamHandler, WrapFuture,
 };
 use actix_web::web;
 use actix_web_actors::ws::{self, Message};
 use log::info;
 use uuid::Uuid;
+
+use crate::{
+    models::{
+        error::AzumaError,
+        message::ChatMessage,
+        session::Session,
+        stateactor::{AddUserSession, RemoveUserSession},
+        textchannel::TextChannel,
+        ws::{AwspRequestMessage, AwspResponseMessage},
+    },
+    websocket::broker::{MassSubChannel, UnsubAll},
+    AzumaState,
+};
 
 pub struct Ws {
     pub data: web::Data<AzumaState>,

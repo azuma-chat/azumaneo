@@ -1,6 +1,7 @@
-use crate::models::message::ChatMessage;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use crate::models::message::ChatMessage;
 
 #[derive(Deserialize)]
 #[serde(tag = "type", content = "content")]

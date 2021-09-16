@@ -1,8 +1,9 @@
+use std::error::Error as ErrorTrait;
+
 use actix::{MailboxError, Message};
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use serde::Serialize;
 use sqlx::{postgres::PgDatabaseError, Error as SqlxError};
-use std::error::Error as ErrorTrait;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

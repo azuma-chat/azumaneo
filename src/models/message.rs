@@ -1,11 +1,13 @@
-use crate::models::error::AzumaError;
-use crate::websocket::broker::Broadcast;
-use crate::websocket::broker::Broker;
 use actix::prelude::*;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::{query_as, PgPool};
 use uuid::Uuid;
+
+use crate::{
+    models::error::AzumaError,
+    websocket::broker::{Broadcast, Broker},
+};
 
 /// This represents a chat message a user sends to a given channel
 #[derive(Clone, Message, Serialize)]

@@ -1,18 +1,19 @@
-use crate::websocket::connection::Ws;
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    mem::drop,
+};
+
 use actix::{
     dev::{MessageResponse, OneshotSender},
     Actor, Addr, Context, Handler, Message,
 };
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::mem::drop;
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-};
 use uuid::Uuid;
 
 use super::error::AzumaError;
+use crate::websocket::connection::Ws;
 
 /// `StateActor` holds all the runtime required data, which is not needed in a permanent database (e.g. because someone can't be online if the server isn't)
 pub struct StateActor {

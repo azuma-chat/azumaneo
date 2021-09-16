@@ -1,12 +1,3 @@
-use crate::{
-    models::{
-        error::{Argon2idError, AzumaError},
-        session::Session,
-        stateactor::{GetOnlineStatus, OnlineStatus},
-        user::User,
-    },
-    AzumaState,
-};
 use actix_web::{
     web::{self, Json},
     HttpRequest, HttpResponse,
@@ -16,6 +7,16 @@ use log::info;
 use serde::{Deserialize, Serialize};
 use sodiumoxide::crypto::pwhash::argon2id13::{self, HashedPassword};
 use uuid::Uuid;
+
+use crate::{
+    models::{
+        error::{Argon2idError, AzumaError},
+        session::Session,
+        stateactor::{GetOnlineStatus, OnlineStatus},
+        user::User,
+    },
+    AzumaState,
+};
 
 #[doc(hidden)]
 #[derive(Deserialize)]

@@ -1,13 +1,15 @@
-use crate::{
-    models::{message::ChatMessage, session::Session},
-    websocket::connection::Ws,
-};
-use actix::{Actor, Addr, Context, Handler, Message};
 use std::{
     collections::{HashMap, HashSet},
     hash::Hash,
 };
+
+use actix::{Actor, Addr, Context, Handler, Message};
 use uuid::Uuid;
+
+use crate::{
+    models::{message::ChatMessage, session::Session},
+    websocket::connection::Ws,
+};
 
 struct SubManager<S: Clone + Eq + Hash, T: Clone + Eq + Hash> {
     subscribers: HashMap<S, HashSet<T>>,

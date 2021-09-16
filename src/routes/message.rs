@@ -1,10 +1,12 @@
-use crate::models::session::Session;
-use crate::models::{error::AzumaError, message::ChatMessage};
-use crate::AzumaState;
 use actix_web::{web, HttpResponse};
 use log::info;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use crate::{
+    models::{error::AzumaError, message::ChatMessage, session::Session},
+    AzumaState,
+};
 
 #[doc(hidden)]
 #[derive(Deserialize, Clone)]
