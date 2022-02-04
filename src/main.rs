@@ -86,7 +86,7 @@ async fn main() {
             .route("/user/register", web::post().to(register_user))
             .route("/user/login", web::post().to(login_user))
             .route("/user/update", web::patch().to(update_user))
-            .route("/user/info", web::get().to(fetch_user))
+            .route("/user/{user}", web::get().to(fetch_user))
             .route("/user/status/set", web::post().to(set_onlinestatus))
             // message routes
             .route("/message/send", web::post().to(send_msg))

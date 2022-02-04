@@ -87,3 +87,9 @@ impl From<SqlxError> for AzumaError {
         }
     }
 }
+
+impl From<uuid::Error> for AzumaError {
+    fn from(_: uuid::Error) -> Self {
+        Self::BadRequest
+    }
+}

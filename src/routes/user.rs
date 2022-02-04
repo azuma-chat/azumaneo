@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use actix_web::{
     web::{self, Json},
     HttpRequest, HttpResponse,
@@ -130,18 +132,26 @@ pub struct FetchUserResponse {
 
 /// Fetch information about a user
 pub async fn fetch_user(
-    request: Json<FetchUserRequest>,
+    path: web::Path<String>,
     state: web::Data<AzumaState>,
+    session: Session,
 ) -> Result<HttpResponse, AzumaError> {
-    let user = User::get_by_id(&request.user, &state.db).await?;
-    let onlinestatus = state
-        .state
-        .send(GetOnlineStatus { user: request.user })
-        .await?;
+    let user = path.into_inner();
+
+    let user_id = {
+        if &user == "self" {
+            session.subject
+        } else {
+            Uuid::from_str(&user)?
+        }
+    };
+
+    let user = User::get_by_id(&user_id, &state.db).await?;
+    let onlinestatus = state.state.send(GetOnlineStatus { user: user_id }).await?;
     let response = FetchUserResponse {
         onlinestatus: onlinestatus,
         user: user,
     };
-    dbg!(&onlinestatus);
+
     Ok(HttpResponse::Ok().json(response))
 }
