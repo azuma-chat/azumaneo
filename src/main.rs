@@ -77,7 +77,7 @@ async fn main() {
 
     let server = HttpServer::new(move || {
         App::new()
-            .data(state.clone())
+            .app_data(state.clone())
             .wrap(Logger::default())
             // general API routes
             .route("/", web::get().to(api_info))

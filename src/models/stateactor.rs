@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    collections::{HashMap, HashSet},
+    collections::{HashMap},
     mem::drop,
 };
 
@@ -8,7 +8,6 @@ use actix::{
     dev::{MessageResponse, OneshotSender},
     Actor, Addr, Context, Handler, Message,
 };
-use log::debug;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -93,6 +92,7 @@ impl Handler<RemoveOnlineStatus> for StateActor {
     }
 }
 
+#[allow(unused_must_use)]
 impl<A, M> MessageResponse<A, M> for OnlineStatus
 where
     A: Actor,
