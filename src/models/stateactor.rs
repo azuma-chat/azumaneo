@@ -160,6 +160,11 @@ impl Handler<AddUserSession> for StateActor {
                 sessions
             }
         };
+
+        if let None = self.onlinestatus.get(&msg.subject) {
+            self.onlinestatus.insert(msg.subject, OnlineStatus::Online);
+        }
+        
         self.usersessions.insert(msg.subject, sessions);
     }
 }
