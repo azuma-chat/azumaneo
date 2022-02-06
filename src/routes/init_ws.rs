@@ -3,7 +3,8 @@ use actix_web_actors::ws;
 use log::info;
 use uuid::Uuid;
 
-use crate::{websocket::connection::Ws, AzumaState};
+use crate::websocket::connection::Ws;
+use crate::AzumaState;
 
 /// This route responds to clients wanting to upgrade their connection to a websocket
 pub(crate) async fn init_ws(

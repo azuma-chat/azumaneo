@@ -1,14 +1,16 @@
-use std::{future::Future, pin::Pin};
+use std::future::Future;
+use std::pin::Pin;
 
-use actix_web::{dev::Payload, web::Data, FromRequest, HttpRequest};
+use actix_web::dev::Payload;
+use actix_web::web::Data;
+use actix_web::{FromRequest, HttpRequest};
 use chrono::{DateTime, Utc};
 use sqlx::{query_as, FromRow, PgPool};
 use uuid::Uuid;
 
-use crate::{
-    models::{error::AzumaError, user::User},
-    AzumaState,
-};
+use crate::models::error::AzumaError;
+use crate::models::user::User;
+use crate::AzumaState;
 
 #[derive(FromRow, Clone)]
 pub struct Session {

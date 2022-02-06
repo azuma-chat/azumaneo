@@ -3,10 +3,10 @@ use log::info;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{
-    models::{error::AzumaError, message::ChatMessage, session::Session},
-    AzumaState,
-};
+use crate::models::error::AzumaError;
+use crate::models::message::ChatMessage;
+use crate::models::session::Session;
+use crate::AzumaState;
 
 #[doc(hidden)]
 #[derive(Deserialize, Clone)]

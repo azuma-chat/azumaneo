@@ -1,17 +1,11 @@
-use actix_web::{
-    web::{Data, Json},
-    HttpResponse,
-};
+use actix_web::web::{Data, Json};
+use actix_web::HttpResponse;
 use serde::Deserialize;
 
-use crate::{
-    models::{
-        error::AzumaError,
-        session::Session,
-        stateactor::{OnlineStatus, SetOnlineStatus},
-    },
-    AzumaState,
-};
+use crate::models::error::AzumaError;
+use crate::models::session::Session;
+use crate::models::stateactor::{OnlineStatus, SetOnlineStatus};
+use crate::AzumaState;
 
 #[derive(Deserialize)]
 pub struct StatusSetRequest {

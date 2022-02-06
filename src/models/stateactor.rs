@@ -1,13 +1,9 @@
-use std::{
-    cell::RefCell,
-    collections::{HashMap},
-    mem::drop,
-};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::mem::drop;
 
-use actix::{
-    dev::{MessageResponse, OneshotSender},
-    Actor, Addr, Context, Handler, Message,
-};
+use actix::dev::{MessageResponse, OneshotSender};
+use actix::{Actor, Addr, Context, Handler, Message};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -164,7 +160,7 @@ impl Handler<AddUserSession> for StateActor {
         if let None = self.onlinestatus.get(&msg.subject) {
             self.onlinestatus.insert(msg.subject, OnlineStatus::Online);
         }
-        
+
         self.usersessions.insert(msg.subject, sessions);
     }
 }

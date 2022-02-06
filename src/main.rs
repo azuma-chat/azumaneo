@@ -5,23 +5,21 @@
 use std::fs::read_to_string;
 
 use actix::{Actor, Addr};
-use actix_web::{middleware::Logger, web, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::middleware::Logger;
+use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
 use log::info;
 use serde::Deserialize;
 use sqlx::{migrate, PgPool};
 
-use crate::{
-    models::{error::AzumaError, stateactor::StateActor},
-    routes::{
-        api::api_info,
-        init_ws::init_ws,
-        message::send_msg,
-        textchannel::create_textchannel,
-        user::{fetch_user, login_user, register_user, update_user},
-        userstatus::set_onlinestatus,
-    },
-    websocket::broker::Broker,
-};
+use crate::models::error::AzumaError;
+use crate::models::stateactor::StateActor;
+use crate::routes::api::api_info;
+use crate::routes::init_ws::init_ws;
+use crate::routes::message::send_msg;
+use crate::routes::textchannel::create_textchannel;
+use crate::routes::user::{fetch_user, login_user, register_user, update_user};
+use crate::routes::userstatus::set_onlinestatus;
+use crate::websocket::broker::Broker;
 
 mod models;
 mod routes;

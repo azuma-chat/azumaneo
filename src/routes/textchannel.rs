@@ -1,11 +1,12 @@
-use actix_web::{web, web::Json, HttpResponse};
+use actix_web::web::Json;
+use actix_web::{web, HttpResponse};
 use log::info;
 use serde::Deserialize;
 
-use crate::{
-    models::{error::AzumaError, session::Session, textchannel::TextChannel},
-    AzumaState,
-};
+use crate::models::error::AzumaError;
+use crate::models::session::Session;
+use crate::models::textchannel::TextChannel;
+use crate::AzumaState;
 
 #[derive(Deserialize)]
 pub struct TextchannelCreateRequest {

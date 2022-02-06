@@ -1,24 +1,18 @@
 use std::str::FromStr;
 
-use actix_web::{
-    web::{self},
-    HttpRequest, HttpResponse,
-};
+use actix_web::web::{self};
+use actix_web::{HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use log::info;
 use serde::{Deserialize, Serialize};
 use sodiumoxide::crypto::pwhash::argon2id13::{self, HashedPassword};
 use uuid::Uuid;
 
-use crate::{
-    models::{
-        error::{Argon2idError, AzumaError},
-        session::Session,
-        stateactor::{GetOnlineStatus, OnlineStatus},
-        user::User,
-    },
-    AzumaState,
-};
+use crate::models::error::{Argon2idError, AzumaError};
+use crate::models::session::Session;
+use crate::models::stateactor::{GetOnlineStatus, OnlineStatus};
+use crate::models::user::User;
+use crate::AzumaState;
 
 #[doc(hidden)]
 #[derive(Deserialize)]

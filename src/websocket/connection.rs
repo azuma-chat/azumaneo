@@ -7,18 +7,14 @@ use actix_web_actors::ws::{self, Message};
 use log::info;
 use uuid::Uuid;
 
-use crate::{
-    models::{
-        error::AzumaError,
-        message::ChatMessage,
-        session::Session,
-        stateactor::{AddUserSession, RemoveUserSession},
-        textchannel::TextChannel,
-        ws::{AwspRequestMessage, AwspResponseMessage},
-    },
-    websocket::broker::{MassSubChannel, UnsubAll},
-    AzumaState,
-};
+use crate::models::error::AzumaError;
+use crate::models::message::ChatMessage;
+use crate::models::session::Session;
+use crate::models::stateactor::{AddUserSession, RemoveUserSession};
+use crate::models::textchannel::TextChannel;
+use crate::models::ws::{AwspRequestMessage, AwspResponseMessage};
+use crate::websocket::broker::{MassSubChannel, UnsubAll};
+use crate::AzumaState;
 
 pub struct Ws {
     pub data: web::Data<AzumaState>,
