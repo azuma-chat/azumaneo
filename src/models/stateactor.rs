@@ -189,6 +189,7 @@ impl Handler<RemoveUserSession> for StateActor {
         if sessions.1 == true {
             // drop `sessions` in order to borrow mutable later
             drop(sessions);
+            self.onlinestatus.remove(&msg.subject);
             self.usersessions.remove(&msg.subject);
         }
     }
