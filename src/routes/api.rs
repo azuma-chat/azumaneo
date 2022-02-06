@@ -9,9 +9,8 @@ pub struct ApiInfoResponse<'a> {
     authors: Vec<&'a str>,
     license: &'a str,
 }
-/// This route just responds with some info about azumaneo
-pub fn api_info() -> HttpResponse {
-    //TODO: Implement '/api/info' route
+
+pub async fn api_info() -> HttpResponse {
     let response_body = ApiInfoResponse {
         name: env!("CARGO_PKG_NAME"),
         version: env!("CARGO_PKG_VERSION"),
