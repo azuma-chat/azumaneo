@@ -25,7 +25,6 @@ pub struct Ws {
 
 #[derive(MessageMacro)]
 #[rtype(result = "()")]
-
 struct SetSubject(Option<Uuid>);
 
 impl Actor for Ws {
