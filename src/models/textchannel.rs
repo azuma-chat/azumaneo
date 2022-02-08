@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use sqlx::{query_as, PgPool};
+use sqlx::{query, query_as, PgPool};
 use uuid::Uuid;
 
 use crate::models::error::AzumaError;
@@ -47,5 +47,10 @@ impl TextChannel {
             .await?;
 
         Ok(text_channels)
+    }
+
+    pub async fn remove(db: &PgPool, id: &Uuid) -> Result<(), AzumaError> {
+        query!("DELETE FROM textchannels WHERE id = $1", id).execute(db).await?;
+        Ok(())
     }
 }

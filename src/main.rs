@@ -16,7 +16,7 @@ use crate::models::stateactor::StateActor;
 use crate::routes::api::api_info;
 use crate::routes::init_ws::init_ws;
 use crate::routes::message::send_msg;
-use crate::routes::textchannel::create_textchannel;
+use crate::routes::textchannel::{create_textchannel, delete_textchannel};
 use crate::routes::user::{fetch_user, login_user, register_user, update_user};
 use crate::routes::userstatus::set_onlinestatus;
 use crate::websocket::broker::Broker;
@@ -90,6 +90,7 @@ async fn main() {
             .route("/message/send", web::post().to(send_msg))
             // textchannel stuff
             .route("/textchannel/create", web::post().to(create_textchannel))
+            .route("/textchannel/delete", web::post().to(delete_textchannel))
             // custom 404 response
             .default_service(web::route().to(not_found))
     });
