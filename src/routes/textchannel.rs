@@ -40,7 +40,7 @@ pub struct TextchannelDeleteRequest {
 //TODO: proper authorization
 pub async fn delete_textchannel(
     req: Json<TextchannelDeleteRequest>,
-    session: Session,
+    _session: Session,
     state: web::Data<AzumaState>,
 ) -> Result<HttpResponse, AzumaError> {
     TextChannel::remove(&state.db, &req.id).await?;

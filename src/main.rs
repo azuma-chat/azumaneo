@@ -89,8 +89,8 @@ async fn main() {
             // message routes
             .route("/message/send", web::post().to(send_msg))
             // textchannel stuff
-            .route("/textchannel/create", web::post().to(create_textchannel))
-            .route("/textchannel/delete", web::post().to(delete_textchannel))
+            .route("/channel", web::post().to(create_textchannel))
+            .route("/channel", web::delete().to(delete_textchannel))
             // custom 404 response
             .default_service(web::route().to(not_found))
     });
