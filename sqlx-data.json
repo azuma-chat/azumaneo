@@ -1,5 +1,17 @@
 {
   "db": "PostgreSQL",
+  "0b36eb1c85ca637c68b396d840cc325bf631693ce6b32312f206759d9afaa548": {
+    "query": "DELETE FROM textchannels WHERE id = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "100995a75105ade56c488518e547a45d3a3220a070ef02e51358bf5f24fdb1fe": {
     "query": "UPDATE users SET name = COALESCE($1, name), password = COALESCE($2, password) WHERE id = $3 RETURNING *",
     "describe": {
